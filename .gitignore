@@ -1,0 +1,14 @@
+# Local config with credentials
+config/database.php
+
+# User uploads and runtime files
+public/uploads/*
+!public/uploads/.gitkeep
+storage/*
+!storage/.gitkeep
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

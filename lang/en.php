@@ -8,6 +8,7 @@ return [
     'nav_marketplace' => 'Marketplace',
     'nav_smart_storage' => 'Smart Storage',
     'nav_dashboard' => 'Dashboard',
+    'nav_market_prices' => 'Market Prices',
     'nav_profile' => 'Profile',
     'nav_login' => 'Login',
     'nav_register' => 'Register',

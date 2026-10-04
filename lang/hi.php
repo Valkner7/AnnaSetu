@@ -8,6 +8,7 @@ return [
     'nav_marketplace' => 'बाज़ार (Marketplace)',
     'nav_smart_storage' => 'स्मार्ट स्टोरेज',
     'nav_dashboard' => 'डैशबोर्ड',
+    'nav_market_prices' => "\u{092E}\u{0902}\u{0921}\u{0940} \u{092D}\u{093E}\u{0935}",
     'nav_profile' => 'प्रोफ़ाइल',
     'nav_login' => 'लॉगिन',
     'nav_register' => 'रजिस्टर',

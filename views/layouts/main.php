@@ -51,6 +51,9 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
+                        <a class="nav-link" href="/smartharvest/public/index.php?url=mandi"><?= __('nav_market_prices') ?></a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="#"><?= __('nav_services') ?></a>
                     </li>
                     <li class="nav-item">

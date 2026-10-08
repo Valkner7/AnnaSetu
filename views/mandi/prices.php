@@ -64,7 +64,7 @@
 </div>
 <script>
 (function () {
-    var BASE = '/smartharvest/public/index.php?url=mandi/';
+    var BASE = '<?= BASE_URL ?>/index.php?url=mandi/';
     var token = 0;
     function el(id) { return document.getElementById(id); }
     function showStatus(msg, type) {

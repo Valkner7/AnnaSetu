@@ -115,7 +115,7 @@ class AuthController {
             session_start();
         }
         session_destroy();
-        header("Location: /smartharvest/public/");
+        header("Location: " . BASE_URL . "/");
         exit;
     }
 }

@@ -191,7 +191,7 @@
                 <h3 class="fw-bold">Buyer Profile</h3>
                 <p class="text-muted">Complete your profile to start procuring crops directly from farmers at scale.</p>
                 <?php if(!empty($buyerProfile)): ?>
-                    <a href="/smartharvest/public/index.php?url=buyer/marketplace" class="btn btn-secondary-custom mt-3">Procurement Marketplace</a>
+                    <a href="<?= BASE_URL ?>/index.php?url=buyer/marketplace" class="btn btn-secondary-custom mt-3">Procurement Marketplace</a>
                 <?php endif; ?>
             </div>
         </div>
@@ -230,7 +230,7 @@
                 <h3 class="fw-bold">Fleet Manager</h3>
                 <p class="text-muted">Set up your profile so farmers in your radius can easily find and rent your machinery.</p>
                 <?php if(!empty($ownerProfile)): ?>
-                    <a href="/smartharvest/public/index.php?url=equipment/fleet" class="btn btn-primary mt-3">Manage My Fleet</a>
+                    <a href="<?= BASE_URL ?>/index.php?url=equipment/fleet" class="btn btn-primary mt-3">Manage My Fleet</a>
                 <?php endif; ?>
             </div>
         </div>
@@ -256,7 +256,7 @@ if (document.getElementById('buyerProfileForm')) {
         };
 
         try {
-            const res = await fetch('/smartharvest/public/index.php?url=profile/saveBuyerProfile', {
+            const res = await fetch('<?= BASE_URL ?>/index.php?url=profile/saveBuyerProfile', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(payload)
@@ -293,7 +293,7 @@ if (document.getElementById('ownerProfileForm')) {
         };
 
         try {
-            const res = await fetch('/smartharvest/public/index.php?url=profile/saveOwnerProfile', {
+            const res = await fetch('<?= BASE_URL ?>/index.php?url=profile/saveOwnerProfile', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(payload)
@@ -331,7 +331,7 @@ if(document.getElementById('addLandForm')) {
         };
 
         try {
-            const res = await fetch('/smartharvest/public/index.php?url=profile/addLand', {
+            const res = await fetch('<?= BASE_URL ?>/index.php?url=profile/addLand', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(payload)
@@ -369,7 +369,7 @@ if(document.getElementById('addCropForm')) {
         };
 
         try {
-            const res = await fetch('/smartharvest/public/index.php?url=profile/addCrop', {
+            const res = await fetch('<?= BASE_URL ?>/index.php?url=profile/addCrop', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(payload)

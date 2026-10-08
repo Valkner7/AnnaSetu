@@ -12,14 +12,14 @@ class BuyerController {
             session_start();
         }
         if (!isset($_SESSION['user_id'])) {
-            header("Location: /smartharvest/public/index.php?url=auth/loginView");
+            header("Location: " . BASE_URL . "/index.php?url=auth/loginView");
             exit;
         }
     }
 
     public function marketplace() {
         if ($_SESSION['user_role'] !== 'buyer') {
-            header("Location: /smartharvest/public/index.php?url=dashboard");
+            header("Location: " . BASE_URL . "/index.php?url=dashboard");
             exit;
         }
 
@@ -75,7 +75,7 @@ class BuyerController {
 
     public function viewCart() {
         if ($_SESSION['user_role'] !== 'buyer') {
-            header("Location: /smartharvest/public/index.php?url=dashboard");
+            header("Location: " . BASE_URL . "/index.php?url=dashboard");
             exit;
         }
 
@@ -130,7 +130,7 @@ class BuyerController {
 
     public function myOrders() {
         if ($_SESSION['user_role'] !== 'buyer') {
-            header("Location: /smartharvest/public/index.php?url=dashboard");
+            header("Location: " . BASE_URL . "/index.php?url=dashboard");
             exit;
         }
 

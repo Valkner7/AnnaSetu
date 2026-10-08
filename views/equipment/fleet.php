@@ -53,7 +53,7 @@
                         <div class="col-12">
                             <div class="card border-0 shadow-sm" style="border-left: 4px solid var(--secondary-orange);">
                                 <?php if(!empty($eq['image_path'])): ?>
-                                    <img src="/smartharvest/public/<?= htmlspecialchars($eq['image_path']) ?>" class="card-img-top" alt="Equipment" style="height: 120px; object-fit: cover;">
+                                    <img src="<?= BASE_URL ?>/<?= htmlspecialchars($eq['image_path']) ?>" class="card-img-top" alt="Equipment" style="height: 120px; object-fit: cover;">
                                 <?php endif; ?>
                                 <div class="card-body py-2">
                                     <div class="d-flex justify-content-between align-items-center">
@@ -141,7 +141,7 @@ document.getElementById('addEqForm').addEventListener('submit', async function(e
     const formData = new FormData(this);
 
     try {
-        const res = await fetch('/smartharvest/public/index.php?url=equipment/addEquipment', {
+        const res = await fetch('<?= BASE_URL ?>/index.php?url=equipment/addEquipment', {
             method: 'POST',
             body: formData
         });
@@ -173,7 +173,7 @@ document.querySelectorAll('.update-status-btn').forEach(btn => {
         };
 
         try {
-            const res = await fetch('/smartharvest/public/index.php?url=equipment/updateBookingStatus', {
+            const res = await fetch('<?= BASE_URL ?>/index.php?url=equipment/updateBookingStatus', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(payload)

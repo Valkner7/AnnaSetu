@@ -1,5 +1,17 @@
 <?php
 session_start();
+
+// Base URL path of this app (no trailing slash). Derived from where index.php is served,
+// e.g. /smartharvest/public on XAMPP, or empty when public/ is the web root.
+// Override with the APP_BASE_URL environment variable if needed.
+if (!defined('BASE_URL')) {
+    $envBase = getenv('APP_BASE_URL');
+    if ($envBase !== false && $envBase !== '') {
+        define('BASE_URL', rtrim($envBase, '/'));
+    } else {
+        define('BASE_URL', rtrim(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '')), '/'));
+    }
+}
 /**
  * SmartHarvest AI - From Seed to Sale
  * Entry point for the application.

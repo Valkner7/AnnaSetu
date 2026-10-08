@@ -46,13 +46,13 @@
                                 <span class="badge bg-danger rounded-pill"><?= $pendingCount ?></span>
                             <?php endif; ?>
                         </a>
-                        <a class="list-group-item list-group-item-action fw-bold py-3" href="/smartharvest/public/index.php?url=farmer/listProduce">
+                        <a class="list-group-item list-group-item-action fw-bold py-3" href="<?= BASE_URL ?>/index.php?url=farmer/listProduce">
                             <i class="fa-solid fa-plus-circle text-secondary me-2"></i> Sell New Produce
                         </a>
-                        <a class="list-group-item list-group-item-action fw-bold py-3" href="/smartharvest/public/index.php?url=equipment/marketplace">
+                        <a class="list-group-item list-group-item-action fw-bold py-3" href="<?= BASE_URL ?>/index.php?url=equipment/marketplace">
                             <i class="fa-solid fa-tractor text-danger me-2"></i> Rent Equipment
                         </a>
-                        <a class="list-group-item list-group-item-action fw-bold py-3" href="/smartharvest/public/index.php?url=profile">
+                        <a class="list-group-item list-group-item-action fw-bold py-3" href="<?= BASE_URL ?>/index.php?url=profile">
                             <i class="fa-solid fa-map-location-dot text-info me-2"></i> Manage Lands
                         </a>
                     </div>
@@ -72,7 +72,7 @@
                                         <i class="fa-solid fa-wheat-awn position-absolute" style="font-size: 15rem; right: -2rem; bottom: -3rem; opacity: 0.1;"></i>
                                         <h3 class="fw-bold mb-3">Optimize Your Harvest with AI</h3>
                                         <p class="fs-5 mb-4" style="max-width: 600px; opacity: 0.9;">Plan your next sowing season, rent smart machinery, and sell directly to bulk buyers without middlemen.</p>
-                                        <a href="/smartharvest/public/index.php?url=farmer/cropPlanning" class="btn btn-light btn-lg fw-bold px-4" style="color: var(--primary-green);">
+                                        <a href="<?= BASE_URL ?>/index.php?url=farmer/cropPlanning" class="btn btn-light btn-lg fw-bold px-4" style="color: var(--primary-green);">
                                             <i class="fa-solid fa-robot text-primary"></i> Ask AI for Crop Plan
                                         </a>
                                     </div>
@@ -95,7 +95,7 @@
                                         </div>
                                         <p class="text-muted mb-4">List your upcoming or harvested crops on the platform. Let our AI grade it and match you directly with wholesale buyers.</p>
                                         <div class="mt-auto">
-                                            <a href="/smartharvest/public/index.php?url=farmer/listProduce" class="btn btn-secondary-custom w-100 py-3 fw-bold shadow-sm">
+                                            <a href="<?= BASE_URL ?>/index.php?url=farmer/listProduce" class="btn btn-secondary-custom w-100 py-3 fw-bold shadow-sm">
                                                 <i class="fa-solid fa-bullhorn"></i> Sell Produce Now
                                             </a>
                                         </div>
@@ -112,7 +112,7 @@
                                                 <i class="fa-solid fa-tractor fa-2x text-secondary"></i>
                                             </div>
                                             <p class="text-muted small mb-3">Rent modern drones, harvesters, and tractors nearby.</p>
-                                            <a href="/smartharvest/public/index.php?url=equipment/marketplace" class="btn btn-outline-dark fw-bold w-100">Find Equipment</a>
+                                            <a href="<?= BASE_URL ?>/index.php?url=equipment/marketplace" class="btn btn-outline-dark fw-bold w-100">Find Equipment</a>
                                         </div>
                                     </div>
                                     <div class="col-12">
@@ -122,7 +122,7 @@
                                                 <i class="fa-solid fa-map-location-dot fa-2x" style="color: var(--secondary-green);"></i>
                                             </div>
                                             <p class="text-muted small mb-3">Update your soil info and current crops.</p>
-                                            <a href="/smartharvest/public/index.php?url=profile" class="btn btn-primary-custom fw-bold w-100">Manage Profile</a>
+                                            <a href="<?= BASE_URL ?>/index.php?url=profile" class="btn btn-primary-custom fw-bold w-100">Manage Profile</a>
                                         </div>
                                     </div>
                                 </div>
@@ -148,7 +148,7 @@
                                         </thead>
                                         <tbody>
                                             <?php if(empty($myInventory)): ?>
-                                                <tr><td colspan="5" class="text-center text-muted py-4">You have no active listings. <a href="/smartharvest/public/index.php?url=farmer/listProduce">Sell produce here.</a></td></tr>
+                                                <tr><td colspan="5" class="text-center text-muted py-4">You have no active listings. <a href="<?= BASE_URL ?>/index.php?url=farmer/listProduce">Sell produce here.</a></td></tr>
                                             <?php else: ?>
                                                 <?php foreach($myInventory as $inv): ?>
                                                     <tr>
@@ -244,7 +244,7 @@
                 };
 
                 try {
-                    const res = await fetch('/smartharvest/public/index.php?url=farmer/updateOrderStatus', {
+                    const res = await fetch('<?= BASE_URL ?>/index.php?url=farmer/updateOrderStatus', {
                         method: 'POST',
                         headers: {'Content-Type': 'application/json'},
                         body: JSON.stringify(payload)
@@ -307,7 +307,7 @@
                         <i class="fa-solid fa-cart-flatbed fa-4x mb-4 text-primary"></i>
                         <h3 class="fw-bold text-dark">Procurement Marketplace</h3>
                         <p class="text-muted fs-5 mb-4" style="max-width: 500px;">Source high-quality, AI-graded agricultural produce directly from verified farmers across the region.</p>
-                        <a href="/smartharvest/public/index.php?url=buyer/marketplace" class="btn btn-primary btn-lg fw-bold px-5 py-3 shadow">
+                        <a href="<?= BASE_URL ?>/index.php?url=buyer/marketplace" class="btn btn-primary btn-lg fw-bold px-5 py-3 shadow">
                             Enter the Market
                         </a>
                     </div>
@@ -319,11 +319,11 @@
                         <i class="fa-solid fa-list-check fa-4x mb-4 text-secondary"></i>
                         <h4 class="fw-bold">My Procurement Orders</h4>
                         <p class="text-muted small mb-4">View accepted bids and contact farmers for dispatch.</p>
-                        <a href="/smartharvest/public/index.php?url=buyer/myOrders" class="btn btn-outline-dark fw-bold w-100 py-2">View Orders</a>
+                        <a href="<?= BASE_URL ?>/index.php?url=buyer/myOrders" class="btn btn-outline-dark fw-bold w-100 py-2">View Orders</a>
                         
                         <hr class="w-100 my-4 text-muted">
                         
-                        <a href="/smartharvest/public/index.php?url=profile" class="btn btn-light w-100 text-muted border fw-bold"><i class="fa-solid fa-building"></i> Edit Company Profile</a>
+                        <a href="<?= BASE_URL ?>/index.php?url=profile" class="btn btn-light w-100 text-muted border fw-bold"><i class="fa-solid fa-building"></i> Edit Company Profile</a>
                     </div>
                 </div>
             </div>
@@ -345,7 +345,7 @@
                                 <p class="fs-5 mb-0" style="opacity: 0.9;">Turn your idle machinery into passive income. List your tractors and modern tech for local farmers to rent.</p>
                             </div>
                             <div class="col-md-4 text-md-end mt-4 mt-md-0">
-                                <a href="/smartharvest/public/index.php?url=equipment/fleet" class="btn btn-light btn-lg fw-bold px-4 text-dark shadow-sm">
+                                <a href="<?= BASE_URL ?>/index.php?url=equipment/fleet" class="btn btn-light btn-lg fw-bold px-4 text-dark shadow-sm">
                                     <i class="fa-solid fa-plus text-warning"></i> Add Machinery
                                 </a>
                             </div>
@@ -364,7 +364,7 @@
                         </div>
                         <h4 class="fw-bold">Incoming Bookings</h4>
                         <p class="text-muted mb-4">Review requests from farmers, accept bookings, and manage your service schedule.</p>
-                        <a href="/smartharvest/public/index.php?url=equipment/fleet" class="btn btn-primary-custom fw-bold px-5 py-2">Manage Bookings</a>
+                        <a href="<?= BASE_URL ?>/index.php?url=equipment/fleet" class="btn btn-primary-custom fw-bold px-5 py-2">Manage Bookings</a>
                     </div>
                 </div>
             </div>
@@ -376,7 +376,7 @@
                         </div>
                         <h4 class="fw-bold">Service Area Configuration</h4>
                         <p class="text-muted mb-4">Set your base location and maximum travel radius to match with the right farmers.</p>
-                        <a href="/smartharvest/public/index.php?url=profile" class="btn btn-outline-dark fw-bold px-5 py-2">Update Profile</a>
+                        <a href="<?= BASE_URL ?>/index.php?url=profile" class="btn btn-outline-dark fw-bold px-5 py-2">Update Profile</a>
                     </div>
                 </div>
             </div>
@@ -388,7 +388,7 @@
             <i class="fa-solid fa-circle-info fa-2x mb-3"></i>
             <h4>Role not completely configured</h4>
             <p>Please update your profile to access specialized features.</p>
-            <a href="/smartharvest/public/index.php?url=profile" class="btn btn-primary mt-2">Go to Profile</a>
+            <a href="<?= BASE_URL ?>/index.php?url=profile" class="btn btn-primary mt-2">Go to Profile</a>
         </div>
     <?php endif; ?>
 </div>

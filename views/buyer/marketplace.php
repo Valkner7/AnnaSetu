@@ -9,7 +9,7 @@
             </div>
             <div>
                 <?php $cartCount = isset($_SESSION['buyer_cart']) ? count($_SESSION['buyer_cart']) : 0; ?>
-                <a href="/smartharvest/public/index.php?url=buyer/viewCart" class="btn btn-outline-success position-relative me-2">
+                <a href="<?= BASE_URL ?>/index.php?url=buyer/viewCart" class="btn btn-outline-success position-relative me-2">
                     <i class="fa-solid fa-cart-shopping"></i> View Cart
                     <?php if($cartCount > 0): ?>
                         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
@@ -17,7 +17,7 @@
                         </span>
                     <?php endif; ?>
                 </a>
-                <a href="/smartharvest/public/index.php?url=dashboard" class="btn btn-light border"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
+                <a href="<?= BASE_URL ?>/index.php?url=dashboard" class="btn btn-light border"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
             </div>
         </div>
     </div>
@@ -139,7 +139,7 @@ document.getElementById('bidForm').addEventListener('submit', async function(e) 
     };
 
     try {
-        const res = await fetch('/smartharvest/public/index.php?url=buyer/addToCart', {
+        const res = await fetch('<?= BASE_URL ?>/index.php?url=buyer/addToCart', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(payload)

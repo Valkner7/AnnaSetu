@@ -5,7 +5,7 @@
                 <h2 class="fw-bold text-dark"><i class="fa-solid fa-cart-flatbed"></i> Procurement Cart</h2>
                 <p class="text-muted">Review your selected crop listings before placing bulk bids.</p>
             </div>
-            <a href="/smartharvest/public/index.php?url=buyer/marketplace" class="btn btn-outline-secondary">Back to Market</a>
+            <a href="<?= BASE_URL ?>/index.php?url=buyer/marketplace" class="btn btn-outline-secondary">Back to Market</a>
         </div>
     </div>
 
@@ -81,7 +81,7 @@ document.querySelectorAll('.remove-btn').forEach(btn => {
     btn.addEventListener('click', async function() {
         const payload = { listing_id: this.dataset.id };
         try {
-            const res = await fetch('/smartharvest/public/index.php?url=buyer/removeFromCart', {
+            const res = await fetch('<?= BASE_URL ?>/index.php?url=buyer/removeFromCart', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(payload)
@@ -101,13 +101,13 @@ document.getElementById('btnCheckout').addEventListener('click', async function(
     this.innerHTML = 'Processing...';
 
     try {
-        const res = await fetch('/smartharvest/public/index.php?url=buyer/checkout', {
+        const res = await fetch('<?= BASE_URL ?>/index.php?url=buyer/checkout', {
             method: 'POST'
         });
         const data = await res.json();
         if(data.success) {
             showToast('success', data.message);
-            setTimeout(() => window.location.href = '/smartharvest/public/index.php?url=buyer/myOrders', 1500);
+            setTimeout(() => window.location.href = '<?= BASE_URL ?>/index.php?url=buyer/myOrders', 1500);
         } else {
             showToast('error', data.message);
             this.disabled = false;

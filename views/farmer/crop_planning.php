@@ -78,7 +78,7 @@ document.getElementById('aiPlanForm').addEventListener('submit', async function(
     btn.disabled = true;
 
     try {
-        const res = await fetch('/smartharvest/public/index.php?url=farmer/getAiRecommendation', {
+        const res = await fetch('<?= BASE_URL ?>/index.php?url=farmer/getAiRecommendation', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
@@ -122,7 +122,7 @@ document.getElementById('aiPlanForm').addEventListener('submit', async function(
                                 <div class="p-2 bg-light rounded text-sm text-muted">
                                     <i class="fa-solid fa-lightbulb text-warning"></i> ${rec.reason}
                                 </div>
-                                <button class="btn btn-outline-success w-100 mt-3" onclick="window.location.href='/smartharvest/public/index.php?url=profile'">Select & Plant Crop</button>
+                                <button class="btn btn-outline-success w-100 mt-3" onclick="window.location.href='<?= BASE_URL ?>/index.php?url=profile'">Select & Plant Crop</button>
                             </div>
                         </div>
                     </div>`;

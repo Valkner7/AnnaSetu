@@ -13,7 +13,7 @@ class EquipmentController {
             session_start();
         }
         if (!isset($_SESSION['user_id'])) {
-            header("Location: /smartharvest/public/index.php?url=auth/loginView");
+            header("Location: " . BASE_URL . "/index.php?url=auth/loginView");
             exit;
         }
     }
@@ -22,7 +22,7 @@ class EquipmentController {
 
     public function fleet() {
         if ($_SESSION['user_role'] !== 'equipment_owner') {
-            header("Location: /smartharvest/public/index.php?url=dashboard");
+            header("Location: " . BASE_URL . "/index.php?url=dashboard");
             exit;
         }
         
@@ -99,7 +99,7 @@ class EquipmentController {
 
     public function marketplace() {
         if ($_SESSION['user_role'] !== 'farmer') {
-            header("Location: /smartharvest/public/index.php?url=dashboard");
+            header("Location: " . BASE_URL . "/index.php?url=dashboard");
             exit;
         }
         

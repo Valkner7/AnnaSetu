@@ -18,7 +18,7 @@
                         <div class="col-md-6">
                             <div class="card shadow-sm border-0 h-100" style="border-top: 3px solid var(--primary-green); overflow: hidden;">
                                 <?php if(!empty($eq['image_path'])): ?>
-                                    <img src="/smartharvest/public/<?= htmlspecialchars($eq['image_path']) ?>" class="card-img-top" alt="Equipment" style="height: 140px; object-fit: cover;">
+                                    <img src="<?= BASE_URL ?>/<?= htmlspecialchars($eq['image_path']) ?>" class="card-img-top" alt="Equipment" style="height: 140px; object-fit: cover;">
                                 <?php endif; ?>
                                 <div class="card-body">
                                     <h5 class="fw-bold mb-1"><?= htmlspecialchars($eq['name']) ?></h5>
@@ -180,7 +180,7 @@ document.getElementById('bookingForm').addEventListener('submit', async function
     };
 
     try {
-        const res = await fetch('/smartharvest/public/index.php?url=equipment/bookEquipment', {
+        const res = await fetch('<?= BASE_URL ?>/index.php?url=equipment/bookEquipment', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(payload)
@@ -210,7 +210,7 @@ document.querySelectorAll('.cancel-booking-btn').forEach(btn => {
         const payload = { booking_id: this.dataset.id };
 
         try {
-            const res = await fetch('/smartharvest/public/index.php?url=equipment/cancelBooking', {
+            const res = await fetch('<?= BASE_URL ?>/index.php?url=equipment/cancelBooking', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(payload)

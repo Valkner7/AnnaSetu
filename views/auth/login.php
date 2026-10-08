@@ -3,7 +3,7 @@
         <div class="col-md-6 col-lg-5">
             <div class="card shadow border-0" style="border-top: 4px solid var(--primary-green);">
                 <div class="card-body p-4 p-md-5 text-center">
-                    <img src="/smartharvest/public/assets/images/logo.jpg" alt="Logo" style="height: 60px; margin-bottom: 20px;">
+                    <img src="<?= BASE_URL ?>/assets/images/logo.jpg" alt="Logo" style="height: 60px; margin-bottom: 20px;">
                     <h3 class="fw-bold text-dark mb-4">Welcome Back</h3>
                     
                     <div id="loginAlert" class="alert d-none" role="alert"></div>
@@ -26,7 +26,7 @@
                         <button type="submit" class="btn btn-primary-custom w-100 py-2 fw-bold" id="loginBtn">Login to Dashboard</button>
                     </form>
                     
-                    <p class="mt-4 mb-0">Don't have an account? <a href="/smartharvest/public/index.php?url=auth/registerView" style="color: var(--primary-orange); font-weight: bold;">Register here</a></p>
+                    <p class="mt-4 mb-0">Don't have an account? <a href="<?= BASE_URL ?>/index.php?url=auth/registerView" style="color: var(--primary-orange); font-weight: bold;">Register here</a></p>
                 </div>
             </div>
         </div>
@@ -50,7 +50,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
 
     try {
         // Fetch API - Same endpoint the mobile app would use
-        const response = await fetch('/smartharvest/public/index.php?url=auth/login', {
+        const response = await fetch('<?= BASE_URL ?>/index.php?url=auth/login', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -65,7 +65,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
             // Save token (Simulation for web)
             localStorage.setItem('auth_token', result.token);
             setTimeout(() => {
-                window.location.href = '/smartharvest/public/index.php?url=dashboard'; 
+                window.location.href = '<?= BASE_URL ?>/index.php?url=dashboard'; 
             }, 1000);
         } else {
             showToast('error', result.message);

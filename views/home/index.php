@@ -5,17 +5,17 @@
         <div class="carousel-inner w-100 h-100">
             <!-- Slide 1: Farmer & Tech -->
             <div class="carousel-item active w-100 h-100">
-                <img src="/smartharvest/public/assets/images/banner1.jpg" class="d-block w-100 h-100" style="object-fit: cover;" alt="Smart Farming">
+                <img src="<?= BASE_URL ?>/assets/images/banner1.jpg" class="d-block w-100 h-100" style="object-fit: cover;" alt="Smart Farming">
                 <div class="carousel-overlay position-absolute w-100 h-100" style="top:0; left:0; background: linear-gradient(135deg, rgba(27,94,32,0.85) 0%, rgba(46,160,67,0.7) 100%);"></div>
             </div>
             <!-- Slide 2: Smart Storage & Market -->
             <div class="carousel-item w-100 h-100">
-                <img src="/smartharvest/public/assets/images/banner2.jpg" class="d-block w-100 h-100" style="object-fit: cover;" alt="Wholesale Market">
+                <img src="<?= BASE_URL ?>/assets/images/banner2.jpg" class="d-block w-100 h-100" style="object-fit: cover;" alt="Wholesale Market">
                 <div class="carousel-overlay position-absolute w-100 h-100" style="top:0; left:0; background: linear-gradient(135deg, rgba(27,94,32,0.85) 0%, rgba(46,160,67,0.7) 100%);"></div>
             </div>
             <!-- Slide 3: Drones & Machinery -->
             <div class="carousel-item w-100 h-100">
-                <img src="/smartharvest/public/assets/images/banner3.jpg" class="d-block w-100 h-100" style="object-fit: cover;" alt="Agri Services">
+                <img src="<?= BASE_URL ?>/assets/images/banner3.jpg" class="d-block w-100 h-100" style="object-fit: cover;" alt="Agri Services">
                 <div class="carousel-overlay position-absolute w-100 h-100" style="top:0; left:0; background: linear-gradient(135deg, rgba(27,94,32,0.85) 0%, rgba(46,160,67,0.7) 100%);"></div>
             </div>
         </div>
@@ -37,7 +37,7 @@
         <p class="hero-subtitle fs-3 fw-light mb-3" style="text-shadow: 1px 1px 3px rgba(0,0,0,0.5);">SmartHarvest AI Ecosystem</p>
         <p class="lead mb-4 mx-auto" style="max-width: 700px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);">A complete agricultural ecosystem connecting farmers with AI intelligence, smart storage, and direct buyers.</p>
         <div class="d-flex justify-content-center gap-3">
-            <a href="/smartharvest/public/index.php?url=auth/registerView" class="btn btn-primary-custom btn-lg px-4 shadow">Join as Farmer</a>
+            <a href="<?= BASE_URL ?>/index.php?url=auth/registerView" class="btn btn-primary-custom btn-lg px-4 shadow">Join as Farmer</a>
             <a href="#features" class="btn btn-secondary-custom btn-lg px-4 shadow">Explore Platform</a>
         </div>
     </div>

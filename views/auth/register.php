@@ -4,7 +4,7 @@
             <div class="card shadow border-0" style="border-top: 4px solid var(--primary-orange);">
                 <div class="card-body p-4 p-md-5">
                     <div class="text-center mb-4">
-                        <img src="/smartharvest/public/assets/images/logo.jpg" alt="Logo" style="height: 50px; margin-bottom: 10px;">
+                        <img src="<?= BASE_URL ?>/assets/images/logo.jpg" alt="Logo" style="height: 50px; margin-bottom: 10px;">
                         <h3 class="fw-bold text-dark">Join Annasetu</h3>
                         <p class="text-muted">Register to access the complete agricultural ecosystem</p>
                     </div>
@@ -50,7 +50,7 @@
                         <button type="submit" class="btn btn-secondary-custom w-100 py-2 fw-bold" id="registerBtn">Create Account</button>
                     </form>
                     
-                    <p class="mt-4 mb-0 text-center">Already have an account? <a href="/smartharvest/public/index.php?url=auth/loginView" style="color: var(--primary-green); font-weight: bold;">Login here</a></p>
+                    <p class="mt-4 mb-0 text-center">Already have an account? <a href="<?= BASE_URL ?>/index.php?url=auth/loginView" style="color: var(--primary-green); font-weight: bold;">Login here</a></p>
                 </div>
             </div>
         </div>
@@ -76,7 +76,7 @@ document.getElementById('registerForm').addEventListener('submit', async functio
     };
 
     try {
-        const response = await fetch('/smartharvest/public/index.php?url=auth/register', {
+        const response = await fetch('<?= BASE_URL ?>/index.php?url=auth/register', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -89,7 +89,7 @@ document.getElementById('registerForm').addEventListener('submit', async functio
         if (result.success) {
             showToast('success', result.message + ' Redirecting...');
             setTimeout(() => {
-                window.location.href = '/smartharvest/public/index.php?url=auth/loginView'; 
+                window.location.href = '<?= BASE_URL ?>/index.php?url=auth/loginView'; 
             }, 1500);
         } else {
             showToast('error', result.message);

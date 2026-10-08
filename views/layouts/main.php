@@ -11,7 +11,7 @@
     <!-- SweetAlert2 for Modern Toasts -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="/smartharvest/public/assets/css/style.css?v=<?= time() ?>">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/style.css?v=<?= time() ?>">
 </head>
 <body>
 
@@ -41,8 +41,8 @@
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
         <div class="container">
-            <a class="navbar-brand" href="/smartharvest/public/">
-                <img src="/smartharvest/public/assets/images/logo.jpg" alt="Annasetu Logo">
+            <a class="navbar-brand" href="<?= BASE_URL ?>/">
+                <img src="<?= BASE_URL ?>/assets/images/logo.jpg" alt="Annasetu Logo">
                 Annasetu
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -51,7 +51,7 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="/smartharvest/public/index.php?url=mandi"><?= __('nav_market_prices') ?></a>
+                        <a class="nav-link" href="<?= BASE_URL ?>/index.php?url=mandi"><?= __('nav_market_prices') ?></a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="#"><?= __('nav_services') ?></a>
@@ -83,20 +83,20 @@
 
                     <?php if(isset($_SESSION['user_id'])): ?>
                     <li class="nav-item ms-lg-3">
-                        <a class="btn btn-outline-success px-4" href="/smartharvest/public/index.php?url=dashboard"><?= __('nav_dashboard') ?></a>
+                        <a class="btn btn-outline-success px-4" href="<?= BASE_URL ?>/index.php?url=dashboard"><?= __('nav_dashboard') ?></a>
                     </li>
                     <li class="nav-item ms-lg-2">
-                        <a class="btn btn-outline-secondary px-4" href="/smartharvest/public/index.php?url=profile"><?= __('nav_profile') ?></a>
+                        <a class="btn btn-outline-secondary px-4" href="<?= BASE_URL ?>/index.php?url=profile"><?= __('nav_profile') ?></a>
                     </li>
                     <li class="nav-item ms-lg-2">
-                        <a class="btn btn-danger px-4" href="/smartharvest/public/index.php?url=auth/logout"><?= __('nav_logout') ?></a>
+                        <a class="btn btn-danger px-4" href="<?= BASE_URL ?>/index.php?url=auth/logout"><?= __('nav_logout') ?></a>
                     </li>
                     <?php else: ?>
                     <li class="nav-item ms-lg-3">
-                        <a class="btn btn-secondary-custom px-4" href="/smartharvest/public/index.php?url=auth/loginView"><?= __('nav_login') ?></a>
+                        <a class="btn btn-secondary-custom px-4" href="<?= BASE_URL ?>/index.php?url=auth/loginView"><?= __('nav_login') ?></a>
                     </li>
                     <li class="nav-item ms-lg-2">
-                        <a class="btn btn-primary-custom px-4" href="/smartharvest/public/index.php?url=auth/registerView"><?= __('nav_register') ?></a>
+                        <a class="btn btn-primary-custom px-4" href="<?= BASE_URL ?>/index.php?url=auth/registerView"><?= __('nav_register') ?></a>
                     </li>
                     <?php endif; ?>
                 </ul>

@@ -4,7 +4,7 @@
             <h2 class="fw-bold" style="color: var(--primary-green);"><i class="fa-solid fa-list-check"></i> My Procurement Bids</h2>
             <p class="text-muted">Track the status of your offers to farmers.</p>
         </div>
-        <a href="/smartharvest/public/index.php?url=buyer/marketplace" class="btn btn-primary-custom"><i class="fa-solid fa-store"></i> Back to Market</a>
+        <a href="<?= BASE_URL ?>/index.php?url=buyer/marketplace" class="btn btn-primary-custom"><i class="fa-solid fa-store"></i> Back to Market</a>
     </div>
 
     <div class="card shadow-sm border-0">

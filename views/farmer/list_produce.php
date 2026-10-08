@@ -74,7 +74,7 @@ document.getElementById('listProduceForm').addEventListener('submit', async func
     };
 
     try {
-        const res = await fetch('/smartharvest/public/index.php?url=farmer/saveListing', {
+        const res = await fetch('<?= BASE_URL ?>/index.php?url=farmer/saveListing', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(payload)
@@ -83,7 +83,7 @@ document.getElementById('listProduceForm').addEventListener('submit', async func
         
         if(data.success) {
             showToast('success', 'Produce listed successfully on the marketplace!');
-            setTimeout(() => window.location.href = '/smartharvest/public/index.php?url=dashboard', 1500);
+            setTimeout(() => window.location.href = '<?= BASE_URL ?>/index.php?url=dashboard', 1500);
         } else {
             showToast('error', data.message || 'Validation error');
             btn.disabled = false;

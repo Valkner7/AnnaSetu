@@ -11,7 +11,7 @@ class ProfileController {
             session_start();
         }
         if (!isset($_SESSION['user_id'])) {
-            header("Location: /smartharvest/public/index.php?url=auth/loginView");
+            header("Location: " . BASE_URL . "/index.php?url=auth/loginView");
             exit;
         }
     }

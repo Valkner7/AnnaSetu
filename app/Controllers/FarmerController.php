@@ -12,7 +12,7 @@ class FarmerController {
             session_start();
         }
         if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'farmer') {
-            header("Location: /smartharvest/public/index.php?url=dashboard");
+            header("Location: " . BASE_URL . "/index.php?url=dashboard");
             exit;
         }
     }

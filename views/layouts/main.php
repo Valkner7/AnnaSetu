@@ -63,15 +63,21 @@
                         <a class="nav-link" href="#"><?= __('nav_smart_storage') ?></a>
                     </li>
                     
+                    <?php
+                    // Only allow route-like values to be echoed into links (fixes reflected XSS).
+                    $rawRoute = (string)($_GET['url'] ?? 'home');
+                    $safeRoute = preg_match('#^[A-Za-z0-9/_-]{1,100}$#', $rawRoute) ? $rawRoute : 'home';
+                    $langSwitchUrl = htmlspecialchars(urlencode($safeRoute), ENT_QUOTES, 'UTF-8');
+                    ?>
                     <!-- Language Switcher -->
                     <li class="nav-item dropdown ms-lg-3">
                         <a class="nav-link dropdown-toggle btn btn-sm btn-outline-secondary" href="#" id="langDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="fa-solid fa-language"></i> <?= strtoupper(\App\Helpers\Translator::getCurrentLang()) ?>
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="langDropdown">
-                            <li><a class="dropdown-item" href="?url=<?= $_GET['url'] ?? 'home' ?>&lang=en">English</a></li>
-                            <li><a class="dropdown-item" href="?url=<?= $_GET['url'] ?? 'home' ?>&lang=hi">हिंदी (Hindi)</a></li>
-                            <li><a class="dropdown-item" href="?url=<?= $_GET['url'] ?? 'home' ?>&lang=pa">ਪੰਜਾਬੀ (Punjabi)</a></li>
+                            <li><a class="dropdown-item" href="?url=<?= $langSwitchUrl ?>&lang=en">English</a></li>
+                            <li><a class="dropdown-item" href="?url=<?= $langSwitchUrl ?>&lang=hi">हिंदी (Hindi)</a></li>
+                            <li><a class="dropdown-item" href="?url=<?= $langSwitchUrl ?>&lang=pa">ਪੰਜਾਬੀ (Punjabi)</a></li>
                         </ul>
                     </li>
 

@@ -95,18 +95,46 @@
         el('go').disabled = true;
         el('result').classList.add('d-none');
     }
+    function todayIso() {
+        var t = new Date();
+        var m = t.getMonth() + 1, day = t.getDate();
+        return t.getFullYear() + '-' + (m < 10 ? '0' : '') + m + '-' + (day < 10 ? '0' : '') + day;
+    }
+    // Keep only projected rows dated today or later (ISO dates compare correctly as strings).
+    function futureRows(rows, today) {
+        return (rows || []).filter(function (f) { return f && f.date && f.date >= today; });
+    }
+    // One notice only: prefer the service's age warning, then its data note, else a generic stale message.
+    function pickNotice(d, hiddenCount) {
+        if (d.data_age_warning) { return d.data_age_warning; }
+        if (d.data_note) { return d.data_note; }
+        if (hiddenCount > 0) { return 'Price data was last updated on ' + d.latest_date + '. Older projected dates are hidden.'; }
+        return '';
+    }
     function render(d) {
+        var all = d.forecast || [];
+        var rows = futureRows(all, todayIso());
+        var hidden = all.length - rows.length;
         var w = el('warnings');
         w.innerHTML = '';
-        if (d.data_age_warning) { addWarning(w, d.data_age_warning); }
-        if (d.data_note) { addWarning(w, d.data_note); }
+        var notice = pickNotice(d, hidden);
+        if (notice) { addWarning(w, notice); }
         el('price').textContent = money(d.latest_price) + ' / quintal';
         el('priceMeta').textContent = d.crop + ' at ' + d.mandi + ' - reported on ' + d.latest_date;
         el('trend').textContent = 'Trend: ' + (d.trend || 'n/a');
-        el('projNote').textContent = 'Projected forward from ' + d.latest_date + ' (not from today).';
+        el('projNote').textContent = '';
         var tb = el('rows');
         tb.innerHTML = '';
-        (d.forecast || []).forEach(function (f) {
+        if (rows.length === 0) {
+            var er = document.createElement('tr');
+            var ec = document.createElement('td');
+            ec.colSpan = 2;
+            ec.className = 'text-muted';
+            ec.textContent = 'No current projection available. Showing the last reported price only.';
+            er.appendChild(ec);
+            tb.appendChild(er);
+        }
+        rows.forEach(function (f) {
             var tr = document.createElement('tr');
             var a = document.createElement('td');
             a.textContent = f.date;

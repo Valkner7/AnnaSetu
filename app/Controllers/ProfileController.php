@@ -48,7 +48,7 @@ class ProfileController {
             return;
         }
 
-        $data = json_decode(file_get_contents('php://input'), true);
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
         if (empty($data['company_name'])) {
             echo json_encode(['success' => false, 'message' => 'Company Name is required.']);
             return;
@@ -60,10 +60,10 @@ class ProfileController {
         $stmt->execute([$_SESSION['user_id']]);
         if ($stmt->fetch()) {
             $update = $db->prepare("UPDATE buyer_profiles SET company_name=?, gstin=?, procurement_capacity=?, delivery_address=? WHERE user_id=?");
-            $success = $update->execute([$data['company_name'], $data['gstin'], $data['procurement_capacity'] ?? 0, $data['delivery_address'], $_SESSION['user_id']]);
+            $success = $update->execute([$data['company_name'], ($data['gstin'] ?? null), $data['procurement_capacity'] ?? 0, $data['delivery_address'], $_SESSION['user_id']]);
         } else {
             $insert = $db->prepare("INSERT INTO buyer_profiles (user_id, company_name, gstin, procurement_capacity, delivery_address) VALUES (?, ?, ?, ?, ?)");
-            $success = $insert->execute([$_SESSION['user_id'], $data['company_name'], $data['gstin'], $data['procurement_capacity'] ?? 0, $data['delivery_address']]);
+            $success = $insert->execute([$_SESSION['user_id'], $data['company_name'], ($data['gstin'] ?? null), $data['procurement_capacity'] ?? 0, ($data['delivery_address'] ?? null)]);
         }
 
         echo json_encode(['success' => $success, 'message' => $success ? 'Company Profile saved successfully!' : 'Database error.']);
@@ -76,7 +76,7 @@ class ProfileController {
             return;
         }
 
-        $data = json_decode(file_get_contents('php://input'), true);
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
         if (empty($data['business_name']) || empty($data['base_location'])) {
             echo json_encode(['success' => false, 'message' => 'Business Name and Base Location are required.']);
             return;

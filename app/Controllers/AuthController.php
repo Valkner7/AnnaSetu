@@ -2,6 +2,7 @@
 namespace App\Controllers;
 
 use App\Models\User;
+use App\Helpers\LoginThrottle;
 
 class AuthController {
 
@@ -45,6 +46,28 @@ class AuthController {
         // the account is created so a bad request leaves no role-less user.
         if (!is_string($data['role']) || !in_array($data['role'], self::SELF_REGISTER_ROLES, true)) {
             echo json_encode(['success' => false, 'message' => 'Invalid role selected.']);
+            return;
+        }
+
+        // Input checks (N5): phone must be a 10-digit Indian mobile number,
+        // password at least 8 characters, names plain strings of sane length.
+        foreach (['first_name', 'last_name', 'phone', 'password'] as $field) {
+            if (!is_string($data[$field])) {
+                echo json_encode(['success' => false, 'message' => 'Invalid input.']);
+                return;
+            }
+        }
+        $data['phone'] = trim($data['phone']);
+        if (!preg_match('/^[6-9][0-9]{9}$/', $data['phone'])) {
+            echo json_encode(['success' => false, 'message' => 'Enter a valid 10-digit mobile number.']);
+            return;
+        }
+        if (strlen($data['password']) < 8) {
+            echo json_encode(['success' => false, 'message' => 'Password must be at least 8 characters.']);
+            return;
+        }
+        if (mb_strlen($data['first_name']) > 50 || mb_strlen($data['last_name']) > 50) {
+            echo json_encode(['success' => false, 'message' => 'Name is too long.']);
             return;
         }
 
@@ -97,10 +120,24 @@ class AuthController {
             return;
         }
 
+        if (!is_string($data['phone']) || !is_string($data['password'])) {
+            echo json_encode(['success' => false, 'message' => 'Invalid credentials.']);
+            return;
+        }
+
+        // Too many recent failures for this phone + IP (N5).
+        $wait = LoginThrottle::lockedFor($data['phone']);
+        if ($wait > 0) {
+            http_response_code(429);
+            echo json_encode(['success' => false, 'message' => 'Too many failed attempts. Try again in ' . ceil($wait / 60) . ' minute(s).']);
+            return;
+        }
+
         $userModel = new User();
         $user = $userModel->findByPhone($data['phone']);
 
         if ($user && password_verify($data['password'], $user['password_hash'])) {
+            LoginThrottle::clear($data['phone']);
             
             // If it's a web request (checking a custom header could be better, but session works for web)
             if (session_status() === PHP_SESSION_NONE) {
@@ -123,6 +160,7 @@ class AuthController {
                 ]
             ]);
         } else {
+            LoginThrottle::fail($data['phone']);
             echo json_encode(['success' => false, 'message' => 'Invalid credentials.']);
         }
     }

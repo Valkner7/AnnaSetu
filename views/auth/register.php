@@ -27,7 +27,7 @@
                             <label class="form-label fw-bold">Phone Number</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light">+91</span>
-                                <input type="tel" class="form-control" id="phone" required placeholder="10-digit mobile number">
+                                <input type="tel" class="form-control" id="phone" required pattern="[6-9][0-9]{9}" maxlength="10" placeholder="10-digit mobile number">
                             </div>
                         </div>
                         
@@ -44,7 +44,7 @@
 
                         <div class="mb-4 text-start">
                             <label class="form-label fw-bold">Password</label>
-                            <input type="password" class="form-control" id="password" required minlength="6">
+                            <input type="password" class="form-control" id="password" required minlength="8">
                         </div>
                         
                         <button type="submit" class="btn btn-secondary-custom w-100 py-2 fw-bold" id="registerBtn">Create Account</button>

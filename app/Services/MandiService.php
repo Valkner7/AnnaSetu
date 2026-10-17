@@ -5,12 +5,22 @@ class MandiService {
     private $base;
     private $timeout;
     private $connectTimeout;
+    private $cacheDir;
+    private $cacheTtl;
 
-    public function __construct() {
+    /**
+     * @param array|null $override Optional config overrides (used by tests).
+     */
+    public function __construct(?array $override = null) {
         $cfg = require __DIR__ . '/../../config/mandi.php';
+        if ($override) {
+            $cfg = array_merge($cfg, $override);
+        }
         $this->base = rtrim($cfg['api_base'], '/');
         $this->timeout = $cfg['timeout_seconds'] ?? 90;
         $this->connectTimeout = $cfg['connect_timeout_seconds'] ?? 20;
+        $this->cacheTtl = (int) ($cfg['cache_ttl_seconds'] ?? 14400);
+        $this->cacheDir = rtrim($cfg['cache_dir'] ?? (__DIR__ . '/../../storage/cache/mandi'), '/\\');
     }
 
     public function getMeta($crop = null) {
@@ -21,7 +31,80 @@ class MandiService {
         return $this->get('/predict', ['crop' => $crop, 'mandi' => $mandi]);
     }
 
+    /**
+     * GET with a small file cache (M4).
+     *
+     * - A fresh cached copy (younger than cache_ttl_seconds) is returned
+     *   without calling the price service, so dropdown changes do not wake
+     *   the free-tier host.
+     * - Only successful responses are cached. The key includes the path and
+     *   every parameter, so Potato/Rayya can never be served for Onion/Khanna.
+     * - If the live call fails, the last cached copy is served marked
+     *   'stale' => true, however old it is. With no copy, the error is returned.
+     *
+     * Result keys: ok, status, error, data, cached (bool), stale (bool).
+     */
     private function get($path, $params = []) {
+        $key = $this->cacheKey($path, $params);
+        $cached = $this->cacheRead($key);
+
+        if ($cached !== null && (time() - $cached['saved_at']) < $this->cacheTtl) {
+            return ['ok' => true, 'status' => 200, 'error' => null, 'data' => $cached['data'],
+                    'cached' => true, 'stale' => false];
+        }
+
+        $res = $this->fetchRemote($path, $params);
+        $res['cached'] = false;
+        $res['stale'] = false;
+
+        if ($res['ok']) {
+            $this->cacheWrite($key, $res['data']);
+            return $res;
+        }
+
+        // 404/422 mean "no forecast for this pair": a real answer, not an outage.
+        $isOutage = ($res['status'] === 0 || $res['status'] >= 500);
+        if ($cached !== null && $isOutage) {
+            return ['ok' => true, 'status' => 200, 'error' => null, 'data' => $cached['data'],
+                    'cached' => true, 'stale' => true];
+        }
+        return $res;
+    }
+
+    private function cacheKey($path, $params) {
+        ksort($params);
+        return hash('sha256', $path . '?' . http_build_query($params, '', '&', PHP_QUERY_RFC3986));
+    }
+
+    private function cacheRead($key) {
+        $file = $this->cacheDir . '/' . $key . '.json';
+        if (!is_file($file)) {
+            return null;
+        }
+        $raw = @file_get_contents($file);
+        $rec = $raw === false ? null : json_decode($raw, true);
+        if (!is_array($rec) || !isset($rec['saved_at']) || !array_key_exists('data', $rec) || !is_array($rec['data'])) {
+            return null;
+        }
+        return $rec;
+    }
+
+    private function cacheWrite($key, $data) {
+        if (!is_dir($this->cacheDir) && !@mkdir($this->cacheDir, 0755, true) && !is_dir($this->cacheDir)) {
+            error_log('MandiService: cannot create cache dir ' . $this->cacheDir);
+            return;
+        }
+        $file = $this->cacheDir . '/' . $key . '.json';
+        $tmp = $file . '.' . bin2hex(random_bytes(4)) . '.tmp';
+        $json = json_encode(['saved_at' => time(), 'data' => $data], JSON_UNESCAPED_UNICODE);
+        // Write then rename, so a reader never sees a half-written file.
+        if ($json === false || @file_put_contents($tmp, $json) === false || !@rename($tmp, $file)) {
+            @unlink($tmp);
+            error_log('MandiService: cannot write cache file ' . $file);
+        }
+    }
+
+    protected function fetchRemote($path, $params = []) {
         $url = $this->base . $path;
         if ($params) {
             $url .= '?' . http_build_query($params, '', '&', PHP_QUERY_RFC3986);

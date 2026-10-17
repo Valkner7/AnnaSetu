@@ -69,6 +69,7 @@ class MandiController {
             'data_age_warning' => $d['data_age_warning'] ?? null,
             'data_age_days' => $d['data_age_days'] ?? null,
             'model_note' => $d['model_note'] ?? null,
+            'served_stale' => !empty($res['stale']),
         ]]);
     }
 

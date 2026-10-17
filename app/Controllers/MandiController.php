@@ -4,7 +4,6 @@ namespace App\Controllers;
 use App\Services\MandiService;
 
 class MandiController {
-    private $reliableCrops = ['Potato', 'Onion', 'Tomato'];
 
     public function __construct() {
         if (session_status() === PHP_SESSION_NONE) {
@@ -16,21 +15,39 @@ class MandiController {
         }
     }
 
+    /** Overridable so tests can inject a fake price service. */
+    protected function service() {
+        return new MandiService();
+    }
+
+    /**
+     * Crops we are willing to ask the price service about (M9). The service's
+     * /meta does not reject unknown crops itself, so this check stays here.
+     * The page render passes false: cache only, never wait on a cold start.
+     */
+    protected function allowedCrops($network = true) {
+        return $this->service()->getReliableCrops($network);
+    }
+
     public function index() {
         $title = "Market Prices - SmartHarvest AI";
-        $crops = $this->reliableCrops;
+        $crops = $this->allowedCrops(false);
         $contentView = __DIR__ . '/../../views/mandi/prices.php';
         require_once __DIR__ . '/../../views/layouts/main.php';
     }
 
     public function mandis() {
         $crop = $_GET['crop'] ?? '';
-        if (!in_array($crop, $this->reliableCrops, true)) {
+        if (!is_string($crop) || $crop === '') {
             $this->json(['ok' => false, 'error' => 'Unsupported crop'], 400);
             return;
         }
         session_write_close();
-        $res = (new MandiService())->getMeta($crop);
+        if (!in_array($crop, $this->allowedCrops(), true)) {
+            $this->json(['ok' => false, 'error' => 'Unsupported crop'], 400);
+            return;
+        }
+        $res = $this->service()->getMeta($crop);
         $this->json([
             'ok' => $res['ok'],
             'error' => $res['error'],
@@ -40,13 +57,17 @@ class MandiController {
 
     public function forecast() {
         $crop = $_GET['crop'] ?? '';
-        $mandi = trim($_GET['mandi'] ?? '');
-        if (!in_array($crop, $this->reliableCrops, true) || $mandi === '') {
+        $mandi = is_string($_GET['mandi'] ?? null) ? trim($_GET['mandi']) : '';
+        if (!is_string($crop) || $crop === '' || $mandi === '') {
             $this->json(['ok' => false, 'error' => 'Choose a crop and a mandi'], 400);
             return;
         }
         session_write_close();
-        $res = (new MandiService())->getPredict($crop, $mandi);
+        if (!in_array($crop, $this->allowedCrops(), true)) {
+            $this->json(['ok' => false, 'error' => 'Choose a crop and a mandi'], 400);
+            return;
+        }
+        $res = $this->service()->getPredict($crop, $mandi);
         if (!$res['ok']) {
             $msg = ($res['status'] === 404 || $res['status'] === 422)
                 ? 'No forecast is available for this crop and mandi yet.'

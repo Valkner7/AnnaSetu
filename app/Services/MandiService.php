@@ -23,6 +23,52 @@ class MandiService {
         $this->cacheDir = rtrim($cfg['cache_dir'] ?? (__DIR__ . '/../../storage/cache/mandi'), '/\\');
     }
 
+    // Used only when the price service has never been reachable (no cache yet).
+    // The service's own list (/meta -> reliable_crops) is the source of truth.
+    public const FALLBACK_CROPS = ['Potato', 'Onion', 'Tomato'];
+
+    /**
+     * Crops the price service can forecast (M9).
+     *
+     * @param bool $allowNetwork false = read the cache only and never wait on
+     *        the (possibly sleeping) service, so page renders stay fast.
+     * @return string[] never empty: falls back to FALLBACK_CROPS.
+     */
+    public function getReliableCrops(bool $allowNetwork = true): array {
+        if ($allowNetwork) {
+            $res = $this->get('/meta');
+            $data = $res['ok'] ? $res['data'] : null;
+        } else {
+            $rec = $this->cacheRead($this->cacheKey('/meta', []));
+            $data = $rec['data'] ?? null;     // any age: this list changes very rarely
+        }
+        $list = is_array($data) ? self::cleanCropList($data['reliable_crops'] ?? null) : [];
+        return $list ?: self::FALLBACK_CROPS;
+    }
+
+    /**
+     * Accept only a short list of plain, non-empty strings. Anything else
+     * (wrong type, empty, huge, odd characters) is dropped so a bad response
+     * can never widen what the app is willing to send upstream.
+     */
+    public static function cleanCropList($raw): array {
+        if (!is_array($raw) || count($raw) > 50) {
+            return [];
+        }
+        $out = [];
+        foreach ($raw as $name) {
+            if (!is_string($name)) {
+                continue;
+            }
+            $name = trim($name);
+            if ($name === '' || strlen($name) > 60 || preg_match('/[\x00-\x1F\x7F<>"\'&]/', $name)) {
+                continue;
+            }
+            $out[$name] = true;      // de-duplicate, keep order
+        }
+        return array_map('strval', array_keys($out));
+    }
+
     public function getMeta($crop = null) {
         return $this->get('/meta', $crop ? ['crop' => $crop] : []);
     }

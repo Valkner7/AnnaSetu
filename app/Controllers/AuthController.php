@@ -66,7 +66,7 @@ class AuthController {
             echo json_encode(['success' => false, 'message' => 'Password must be at least 8 characters.']);
             return;
         }
-        if (mb_strlen($data['first_name']) > 50 || mb_strlen($data['last_name']) > 50) {
+        if (\App\Helpers\Validator::length($data['first_name']) > 50 || \App\Helpers\Validator::length($data['last_name']) > 50) {
             echo json_encode(['success' => false, 'message' => 'Name is too long.']);
             return;
         }

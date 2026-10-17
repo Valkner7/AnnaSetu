@@ -44,13 +44,18 @@ class Validator {
         return $d->format('Y-m-d');
     }
 
+    /** Character count that works with or without the mbstring extension. */
+    public static function length(string $v): int {
+        return function_exists('mb_strlen') ? mb_strlen($v, 'UTF-8') : (int)preg_match_all('/./us', $v);
+    }
+
     /** Trimmed string of 1..max characters. */
     public static function text($v, int $max): ?string {
         if (!is_string($v)) {
             return null;
         }
         $v = trim($v);
-        $len = mb_strlen($v);
+        $len = self::length($v);
         return ($len >= 1 && $len <= $max) ? $v : null;
     }
 

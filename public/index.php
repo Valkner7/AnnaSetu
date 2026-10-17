@@ -1,5 +1,21 @@
 <?php
+// Session cookie hardening (N6): not readable by JS, not sent cross-site,
+// and Secure whenever the request came over HTTPS.
+$isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+    || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
+session_set_cookie_params([
+    'lifetime' => 0,
+    'path'     => '/',
+    'secure'   => $isHttps,
+    'httponly' => true,
+    'samesite' => 'Lax',
+]);
 session_start();
+
+// Basic security headers (N6).
+header('X-Content-Type-Options: nosniff');
+header('X-Frame-Options: SAMEORIGIN');
+header('Referrer-Policy: strict-origin-when-cross-origin');
 
 // Base URL path of this app (no trailing slash). Derived from where index.php is served,
 // e.g. /smartharvest/public on XAMPP, or empty when public/ is the web root.
@@ -56,9 +72,14 @@ if (!function_exists('e')) {
 // Check for language switch request
 if (isset($_GET['lang']) && in_array($_GET['lang'], ['en', 'hi', 'pa'])) {
     $_SESSION['lang'] = $_GET['lang'];
-    // Redirect to same URL without the lang parameter to clean URL
-    $urlNoLang = preg_replace('/([&?])lang=[^&]+(&|$)/', '$1', $_SERVER['REQUEST_URI']);
-    $urlNoLang = rtrim($urlNoLang, '?&');
+    // Redirect to the same page without the lang parameter. Only the path and
+    // query are reused, and the target is forced to a single leading slash so
+    // it can never become a protocol-relative open redirect (N8).
+    $parts = parse_url($_SERVER['REQUEST_URI'] ?? '/');
+    $path  = '/' . ltrim($parts['path'] ?? '/', '/\\');
+    parse_str($parts['query'] ?? '', $query);
+    unset($query['lang']);
+    $urlNoLang = $path . ($query ? '?' . http_build_query($query) : '');
     header("Location: " . $urlNoLang);
     exit;
 }
@@ -74,11 +95,22 @@ $urlParts = explode('/', $url);
 $controllerName = 'App\\Controllers\\' . ucfirst($urlParts[0]) . 'Controller';
 $methodName = isset($urlParts[1]) ? $urlParts[1] : 'index';
 
-if (class_exists($controllerName)) {
-    $controller = new $controllerName();
-    if (method_exists($controller, $methodName)) {
+// Only letters are valid in a controller name (keeps odd input away from the
+// autoloader), and only real public actions may be called (N7). This blocks
+// __construct, private/protected methods and anything with odd characters.
+$validController = preg_match('/^[A-Za-z]+$/', $urlParts[0]) === 1 && class_exists($controllerName);
+$validAction = false;
+if ($validController && preg_match('/^[A-Za-z][A-Za-z0-9_]*$/', $methodName) && method_exists($controllerName, $methodName)) {
+    $ref = new ReflectionMethod($controllerName, $methodName);
+    $validAction = $ref->isPublic() && !$ref->isStatic() && !$ref->isConstructor();
+}
+
+if ($validController) {
+    if ($validAction) {
+        $controller = new $controllerName();
         $controller->$methodName();
     } else {
+        http_response_code(404);
         echo "404 - Method not found";
     }
 } else {

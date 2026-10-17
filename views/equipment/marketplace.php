@@ -18,21 +18,21 @@
                         <div class="col-md-6">
                             <div class="card shadow-sm border-0 h-100" style="border-top: 3px solid var(--primary-green); overflow: hidden;">
                                 <?php if(!empty($eq['image_path'])): ?>
-                                    <img src="<?= BASE_URL ?>/<?= htmlspecialchars($eq['image_path']) ?>" class="card-img-top" alt="Equipment" style="height: 140px; object-fit: cover;">
+                                    <img src="<?= BASE_URL ?>/<?= e($eq['image_path']) ?>" class="card-img-top" alt="Equipment" style="height: 140px; object-fit: cover;">
                                 <?php endif; ?>
                                 <div class="card-body">
-                                    <h5 class="fw-bold mb-1"><?= htmlspecialchars($eq['name']) ?></h5>
-                                    <p class="text-muted small mb-2"><i class="fa-solid fa-tag"></i> <?= $eq['type'] ?></p>
+                                    <h5 class="fw-bold mb-1"><?= e($eq['name']) ?></h5>
+                                    <p class="text-muted small mb-2"><i class="fa-solid fa-tag"></i> <?= e($eq['type']) ?></p>
                                     
                                     <div class="mb-3 bg-light p-2 rounded">
-                                        <p class="mb-0 small"><i class="fa-solid fa-building"></i> <?= htmlspecialchars($eq['business_name']) ?></p>
-                                        <p class="mb-0 small"><i class="fa-solid fa-location-dot"></i> Base: <?= htmlspecialchars($eq['base_location']) ?></p>
-                                        <p class="mb-0 small"><i class="fa-solid fa-map-pin"></i> Covers <?= $eq['service_radius_km'] ?> km</p>
+                                        <p class="mb-0 small"><i class="fa-solid fa-building"></i> <?= e($eq['business_name']) ?></p>
+                                        <p class="mb-0 small"><i class="fa-solid fa-location-dot"></i> Base: <?= e($eq['base_location']) ?></p>
+                                        <p class="mb-0 small"><i class="fa-solid fa-map-pin"></i> Covers <?= e($eq['service_radius_km']) ?> km</p>
                                     </div>
                                     
-                                    <h4 class="fw-bold text-success mb-3">₹<?= $eq['rate_per_hour'] ?> <small class="text-muted fs-6">/ hour</small></h4>
+                                    <h4 class="fw-bold text-success mb-3">₹<?= e($eq['rate_per_hour']) ?> <small class="text-muted fs-6">/ hour</small></h4>
                                     
-                                    <button class="btn btn-outline-success w-100 book-btn" data-id="<?= $eq['id'] ?>" data-name="<?= htmlspecialchars($eq['name']) ?>" data-rate="<?= $eq['rate_per_hour'] ?>">
+                                    <button class="btn btn-outline-success w-100 book-btn" data-id="<?= e($eq['id']) ?>" data-name="<?= e($eq['name']) ?>" data-rate="<?= e($eq['rate_per_hour']) ?>">
                                         Book Now
                                     </button>
                                 </div>
@@ -59,7 +59,7 @@
                             <select class="form-select" id="book_land_id" required>
                                 <option value="">-- Choose Land --</option>
                                 <?php foreach($lands as $land): ?>
-                                    <option value="<?= $land['id'] ?>">Land #<?= $land['id'] ?> - <?= $land['area'] ?> Acres</option>
+                                    <option value="<?= e($land['id']) ?>">Land #<?= e($land['id']) ?> - <?= e($land['area']) ?> Acres</option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
@@ -103,10 +103,10 @@
                                     <?php foreach($myBookings as $b): ?>
                                         <tr>
                                             <td class="fw-bold">
-                                                <?= htmlspecialchars($b['equipment_name']) ?><br>
-                                                <small class="text-muted">₹<?= $b['total_cost'] ?> (<?= $b['duration_hours'] ?>h)</small>
+                                                <?= e($b['equipment_name']) ?><br>
+                                                <small class="text-muted">₹<?= e($b['total_cost']) ?> (<?= e($b['duration_hours']) ?>h)</small>
                                             </td>
-                                            <td><?= htmlspecialchars($b['business_name']) ?></td>
+                                            <td><?= e($b['business_name']) ?></td>
                                             <td><?= date('d M', strtotime($b['booking_date'])) ?></td>
                                             <td>
                                                 <?php 
@@ -116,11 +116,11 @@
                                                     if($b['status'] == 'completed') $bg = 'bg-success';
                                                     if($b['status'] == 'cancelled') $bg = 'bg-danger';
                                                 ?>
-                                                <span class="badge <?= $bg ?>"><?= ucfirst($b['status']) ?></span>
+                                                <span class="badge <?= e($bg) ?>"><?= e(ucfirst($b['status'])) ?></span>
                                             </td>
                                             <td>
                                                 <?php if($b['status'] == 'pending'): ?>
-                                                    <button class="btn btn-sm btn-outline-danger cancel-booking-btn" data-id="<?= $b['id'] ?>">Cancel</button>
+                                                    <button class="btn btn-sm btn-outline-danger cancel-booking-btn" data-id="<?= e($b['id']) ?>">Cancel</button>
                                                 <?php else: ?>
                                                     -
                                                 <?php endif; ?>

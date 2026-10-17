@@ -45,6 +45,14 @@ if (!function_exists('__')) {
     }
 }
 
+// HTML-escape helper for views (N2). Use e() for every dynamic value printed
+// into HTML text or a quoted attribute. null becomes ''.
+if (!function_exists('e')) {
+    function e($value): string {
+        return htmlspecialchars((string)($value ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    }
+}
+
 // Check for language switch request
 if (isset($_GET['lang']) && in_array($_GET['lang'], ['en', 'hi', 'pa'])) {
     $_SESSION['lang'] = $_GET['lang'];

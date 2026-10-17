@@ -35,12 +35,12 @@
                                         $grandTotal += $total;
                                     ?>
                                         <tr>
-                                            <td class="fw-bold"><?= htmlspecialchars($item['name']) ?></td>
-                                            <td><?= $item['quantity'] ?> Tons</td>
-                                            <td class="text-success">₹<?= $item['price'] ?> / qtl</td>
+                                            <td class="fw-bold"><?= e($item['name']) ?></td>
+                                            <td><?= e($item['quantity']) ?> Tons</td>
+                                            <td class="text-success">₹<?= e($item['price']) ?> / qtl</td>
                                             <td class="fw-bold">₹<?= number_format($total, 2) ?></td>
                                             <td>
-                                                <button class="btn btn-sm btn-outline-danger remove-btn" data-id="<?= $id ?>"><i class="fa-solid fa-trash"></i></button>
+                                                <button class="btn btn-sm btn-outline-danger remove-btn" data-id="<?= e($id) ?>"><i class="fa-solid fa-trash"></i></button>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>

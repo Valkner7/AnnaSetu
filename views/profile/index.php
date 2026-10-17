@@ -58,7 +58,7 @@
                             <select class="form-select" id="land_id" required>
                                 <option value=""><?= __('choose_land') ?></option>
                                 <?php foreach($lands as $land): ?>
-                                    <option value="<?= $land['id'] ?>">Land #<?= $land['id'] ?> - <?= $land['area'] ?> Acres (<?= $land['soil_type'] ?>)</option>
+                                    <option value="<?= e($land['id']) ?>">Land #<?= e($land['id']) ?> - <?= e($land['area']) ?> Acres (<?= e($land['soil_type']) ?>)</option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
@@ -70,7 +70,7 @@
                                     $langKey = \App\Helpers\Translator::getCurrentLang() === 'pa' ? 'name_pa' : (\App\Helpers\Translator::getCurrentLang() === 'hi' ? 'name_hi' : 'name');
                                 ?>
                                 <?php foreach($masterCrops as $mcrop): ?>
-                                    <option value="<?= $mcrop['id'] ?>"><?= $mcrop[$langKey] ?? $mcrop['name'] ?></option>
+                                    <option value="<?= e($mcrop['id']) ?>"><?= e($mcrop[$langKey] ?? $mcrop['name']) ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
@@ -99,10 +99,10 @@
                         <div class="col-md-6">
                             <div class="card border-0 shadow-sm" style="border-left: 4px solid var(--primary-green);">
                                 <div class="card-body">
-                                    <h5 class="fw-bold">Land #<?= $land['id'] ?></h5>
-                                    <p class="mb-1"><i class="fa-solid fa-ruler-combined text-muted"></i> <?= $land['area'] ?> Acres</p>
-                                    <p class="mb-1"><i class="fa-solid fa-layer-group text-muted"></i> <?= $land['soil_type'] ?> Soil</p>
-                                    <p class="mb-0"><i class="fa-solid fa-location-dot text-muted"></i> <?= htmlspecialchars($land['location_address'] ?: 'N/A') ?></p>
+                                    <h5 class="fw-bold">Land #<?= e($land['id']) ?></h5>
+                                    <p class="mb-1"><i class="fa-solid fa-ruler-combined text-muted"></i> <?= e($land['area']) ?> Acres</p>
+                                    <p class="mb-1"><i class="fa-solid fa-layer-group text-muted"></i> <?= e($land['soil_type']) ?> Soil</p>
+                                    <p class="mb-0"><i class="fa-solid fa-location-dot text-muted"></i> <?= e($land['location_address'] ?: 'N/A') ?></p>
                                 </div>
                             </div>
                         </div>
@@ -131,16 +131,16 @@
                                 <?php else: ?>
                                     <?php foreach($myCrops as $crop): ?>
                                         <tr>
-                                            <td class="fw-bold"><?= $crop['crop_name'] ?></td>
-                                            <td>Land #<?= $crop['land_id'] ?></td>
+                                            <td class="fw-bold"><?= e($crop['crop_name']) ?></td>
+                                            <td>Land #<?= e($crop['land_id']) ?></td>
                                             <td><?= date('d M Y', strtotime($crop['sowing_date'])) ?></td>
-                                            <td><?= $crop['area_allocated'] ?></td>
+                                            <td><?= e($crop['area_allocated']) ?></td>
                                             <td><?= date('d M Y', strtotime($crop['expected_harvest_date'])) ?></td>
                                             <td>
                                                 <?php if($crop['status'] === 'growing'): ?>
                                                     <span class="badge bg-success">Growing</span>
                                                 <?php else: ?>
-                                                    <span class="badge bg-secondary"><?= ucfirst($crop['status']) ?></span>
+                                                    <span class="badge bg-secondary"><?= e(ucfirst($crop['status'])) ?></span>
                                                 <?php endif; ?>
                                             </td>
                                         </tr>
@@ -166,19 +166,19 @@
                     <form id="buyerProfileForm">
                         <div class="mb-3">
                             <label class="form-label">Company Name</label>
-                            <input type="text" class="form-control" id="company_name" value="<?= htmlspecialchars($buyerProfile['company_name'] ?? '') ?>" placeholder="Enter company name" required>
+                            <input type="text" class="form-control" id="company_name" value="<?= e($buyerProfile['company_name'] ?? '') ?>" placeholder="Enter company name" required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">GSTIN / Tax ID</label>
-                            <input type="text" class="form-control" id="gstin" value="<?= htmlspecialchars($buyerProfile['gstin'] ?? '') ?>" placeholder="Enter GSTIN">
+                            <input type="text" class="form-control" id="gstin" value="<?= e($buyerProfile['gstin'] ?? '') ?>" placeholder="Enter GSTIN">
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Procurement Capacity (Tons/Month)</label>
-                            <input type="number" class="form-control" id="procurement_capacity" value="<?= htmlspecialchars($buyerProfile['procurement_capacity'] ?? '') ?>" placeholder="e.g. 500">
+                            <input type="number" class="form-control" id="procurement_capacity" value="<?= e($buyerProfile['procurement_capacity'] ?? '') ?>" placeholder="e.g. 500">
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Delivery Address</label>
-                            <textarea class="form-control" id="delivery_address" rows="2"><?= htmlspecialchars($buyerProfile['delivery_address'] ?? '') ?></textarea>
+                            <textarea class="form-control" id="delivery_address" rows="2"><?= e($buyerProfile['delivery_address'] ?? '') ?></textarea>
                         </div>
                         <button type="submit" class="btn btn-primary-custom w-100" id="btnSaveBuyer">Save Company Profile</button>
                     </form>
@@ -209,15 +209,15 @@
                     <form id="ownerProfileForm">
                         <div class="mb-3">
                             <label class="form-label">Business Name</label>
-                            <input type="text" class="form-control" id="business_name" value="<?= htmlspecialchars($ownerProfile['business_name'] ?? '') ?>" placeholder="Enter business name" required>
+                            <input type="text" class="form-control" id="business_name" value="<?= e($ownerProfile['business_name'] ?? '') ?>" placeholder="Enter business name" required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Service Area (Radius in KM)</label>
-                            <input type="number" class="form-control" id="service_radius_km" value="<?= htmlspecialchars($ownerProfile['service_radius_km'] ?? '50') ?>" required>
+                            <input type="number" class="form-control" id="service_radius_km" value="<?= e($ownerProfile['service_radius_km'] ?? '50') ?>" required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Base Location (Village/District)</label>
-                            <input type="text" class="form-control" id="base_location" value="<?= htmlspecialchars($ownerProfile['base_location'] ?? '') ?>" placeholder="e.g. Ludhiana" required>
+                            <input type="text" class="form-control" id="base_location" value="<?= e($ownerProfile['base_location'] ?? '') ?>" placeholder="e.g. Ludhiana" required>
                         </div>
                         <button type="submit" class="btn btn-secondary-custom w-100" id="btnSaveOwner">Save Profile</button>
                     </form>

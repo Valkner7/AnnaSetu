@@ -19,7 +19,7 @@
                             <select class="form-select" id="farmer_crop_id" required>
                                 <option value="">-- Choose from your crops --</option>
                                 <?php foreach($myCrops as $crop): ?>
-                                    <option value="<?= $crop['id'] ?>"><?= $crop['crop_name'] ?> (<?= $crop['crop_name_hi'] ?>) - Land #<?= $crop['land_id'] ?></option>
+                                    <option value="<?= e($crop['id']) ?>"><?= e($crop['crop_name']) ?> (<?= e($crop['crop_name_hi']) ?>) - Land #<?= e($crop['land_id']) ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>

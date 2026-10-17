@@ -20,7 +20,7 @@
                             <select class="form-select" id="land_id" required>
                                 <option value="">-- Choose Land --</option>
                                 <?php foreach($lands as $land): ?>
-                                    <option value="<?= $land['id'] ?>" data-soil="<?= $land['soil_type'] ?>">Land #<?= $land['id'] ?> - <?= $land['area'] ?> Acres (<?= $land['soil_type'] ?>)</option>
+                                    <option value="<?= e($land['id']) ?>" data-soil="<?= e($land['soil_type']) ?>">Land #<?= e($land['id']) ?> - <?= e($land['area']) ?> Acres (<?= e($land['soil_type']) ?>)</option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
@@ -98,6 +98,8 @@ document.getElementById('aiPlanForm').addEventListener('submit', async function(
                 document.getElementById('aiResults').classList.remove('d-none');
                 document.getElementById('aiDisclaimer').innerText = data.disclaimer;
                 
+                // Escape every server value before it goes into innerHTML (N2).
+                const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
                 let cardsHtml = '';
                 data.recommendations.forEach(rec => {
                     const badgeColor = rec.risk_level === 'Low' ? 'success' : (rec.risk_level === 'Medium' ? 'warning' : 'danger');
@@ -107,20 +109,20 @@ document.getElementById('aiPlanForm').addEventListener('submit', async function(
                         <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid var(--primary-green);">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-start mb-2">
-                                    <h4 class="fw-bold text-dark m-0">${rec.crop} <small class="text-muted">(${rec.crop_hi})</small></h4>
-                                    <span class="badge bg-${badgeColor}">Risk: ${rec.risk_level}</span>
+                                    <h4 class="fw-bold text-dark m-0">${esc(rec.crop)} <small class="text-muted">(${esc(rec.crop_hi)})</small></h4>
+                                    <span class="badge bg-${badgeColor}">Risk: ${esc(rec.risk_level)}</span>
                                 </div>
                                 <div class="progress mb-3" style="height: 10px;">
-                                    <div class="progress-bar bg-success" role="progressbar" style="width: ${rec.suitability_score}%" title="Suitability: ${rec.suitability_score}%"></div>
+                                    <div class="progress-bar bg-success" role="progressbar" style="width: ${Number(rec.suitability_score) || 0}%" title="Suitability: ${esc(rec.suitability_score)}%"></div>
                                 </div>
                                 <ul class="list-unstyled mb-3">
-                                    <li><i class="fa-solid fa-calendar-days text-muted w-20px"></i> <strong>Duration:</strong> ${rec.expected_duration}</li>
-                                    <li><i class="fa-solid fa-droplet text-muted w-20px"></i> <strong>Water Req:</strong> ${rec.water_requirement}</li>
-                                    <li><i class="fa-solid fa-weight-hanging text-muted w-20px"></i> <strong>Est. Yield:</strong> ${rec.estimated_yield}</li>
-                                    <li><i class="fa-solid fa-indian-rupee-sign text-muted w-20px"></i> <strong>Est. Revenue:</strong> <span class="text-success fw-bold">${rec.estimated_revenue}</span></li>
+                                    <li><i class="fa-solid fa-calendar-days text-muted w-20px"></i> <strong>Duration:</strong> ${esc(rec.expected_duration)}</li>
+                                    <li><i class="fa-solid fa-droplet text-muted w-20px"></i> <strong>Water Req:</strong> ${esc(rec.water_requirement)}</li>
+                                    <li><i class="fa-solid fa-weight-hanging text-muted w-20px"></i> <strong>Est. Yield:</strong> ${esc(rec.estimated_yield)}</li>
+                                    <li><i class="fa-solid fa-indian-rupee-sign text-muted w-20px"></i> <strong>Est. Revenue:</strong> <span class="text-success fw-bold">${esc(rec.estimated_revenue)}</span></li>
                                 </ul>
                                 <div class="p-2 bg-light rounded text-sm text-muted">
-                                    <i class="fa-solid fa-lightbulb text-warning"></i> ${rec.reason}
+                                    <i class="fa-solid fa-lightbulb text-warning"></i> ${esc(rec.reason)}
                                 </div>
                                 <button class="btn btn-outline-success w-100 mt-3" onclick="window.location.href='<?= BASE_URL ?>/index.php?url=profile'">Select & Plant Crop</button>
                             </div>

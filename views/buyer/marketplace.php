@@ -13,7 +13,7 @@
                     <i class="fa-solid fa-cart-shopping"></i> View Cart
                     <?php if($cartCount > 0): ?>
                         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                            <?= $cartCount ?>
+                            <?= e($cartCount) ?>
                         </span>
                     <?php endif; ?>
                 </a>
@@ -36,32 +36,32 @@
                     <div class="card h-100 shadow-sm border-0" style="border-top: 4px solid var(--primary-green);">
                         <div class="card-body">
                             <div class="d-flex justify-content-between">
-                                <h5 class="fw-bold mb-1"><?= $list[$langKey] ?? $list['crop_name'] ?></h5>
+                                <h5 class="fw-bold mb-1"><?= e($list[$langKey] ?? $list['crop_name']) ?></h5>
                                 <span class="badge bg-success">Verified</span>
                             </div>
-                            <p class="text-muted small mb-3"><i class="fa-solid fa-location-dot"></i> <?= htmlspecialchars($list['location_address']) ?></p>
+                            <p class="text-muted small mb-3"><i class="fa-solid fa-location-dot"></i> <?= e($list['location_address']) ?></p>
                             
                             <div class="bg-light p-3 rounded mb-3">
                                 <div class="row text-center">
                                     <div class="col-6 border-end">
                                         <small class="text-muted d-block">Quantity</small>
-                                        <strong class="text-dark fs-5"><?= $qtyTons ?> Tons</strong>
+                                        <strong class="text-dark fs-5"><?= e($qtyTons) ?> Tons</strong>
                                     </div>
                                     <div class="col-6">
                                         <small class="text-muted d-block">Expected Price</small>
-                                        <strong class="text-success fs-5">₹<?= $priceQtl ?>/qtl</strong>
+                                        <strong class="text-success fs-5">₹<?= e($priceQtl) ?>/qtl</strong>
                                     </div>
                                 </div>
                             </div>
                             
                             <p class="mb-1 small text-muted"><i class="fa-solid fa-calendar"></i> Harvest: <?= date('d M Y', strtotime($list['harvest_date'])) ?></p>
-                            <p class="mb-3 small text-muted"><i class="fa-solid fa-user"></i> Listed by: <?= htmlspecialchars($list['first_name']) ?></p>
+                            <p class="mb-3 small text-muted"><i class="fa-solid fa-user"></i> Listed by: <?= e($list['first_name']) ?></p>
                             
                             <button class="btn btn-secondary-custom w-100 place-bid-btn" 
-                                data-id="<?= $list['id'] ?>" 
-                                data-name="<?= $list[$langKey] ?? $list['crop_name'] ?>"
-                                data-qty="<?= $qtyTons ?>"
-                                data-price="<?= $list['expected_price_per_kg'] * 100 ?>">
+                                data-id="<?= e($list['id']) ?>" 
+                                data-name="<?= e($list[$langKey] ?? $list['crop_name']) ?>"
+                                data-qty="<?= e($qtyTons) ?>"
+                                data-price="<?= e($list['expected_price_per_kg'] * 100) ?>">
                                 Place Bid
                             </button>
                         </div>

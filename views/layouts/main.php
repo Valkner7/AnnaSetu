@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= $title ?? 'SmartHarvest AI - Annasetu' ?></title>
+    <title><?= e($title ?? 'SmartHarvest AI - Annasetu') ?></title>
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- FontAwesome for Icons -->
@@ -31,9 +31,12 @@
 
     // Helper wrapper for native alerts fallback in older code
     window.showToast = function(type, message) {
+        // SweetAlert2 renders `title` as HTML, so turn the message into safe text first (N2).
+        const safe = document.createElement('div');
+        safe.textContent = String(message == null ? '' : message);
         Toast.fire({
             icon: type, // 'success', 'error', 'warning', 'info'
-            title: message
+            title: safe.innerHTML
         });
     };
 </script>
@@ -72,7 +75,7 @@
                     <!-- Language Switcher -->
                     <li class="nav-item dropdown ms-lg-3">
                         <a class="nav-link dropdown-toggle btn btn-sm btn-outline-secondary" href="#" id="langDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fa-solid fa-language"></i> <?= strtoupper(\App\Helpers\Translator::getCurrentLang()) ?>
+                            <i class="fa-solid fa-language"></i> <?= e(strtoupper(\App\Helpers\Translator::getCurrentLang())) ?>
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="langDropdown">
                             <li><a class="dropdown-item" href="?url=<?= $langSwitchUrl ?>&lang=en">English</a></li>

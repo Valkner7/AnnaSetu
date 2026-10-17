@@ -28,18 +28,18 @@
                             <?php foreach($orders as $o): ?>
                                 <tr>
                                     <td class="fw-bold">
-                                        <?= htmlspecialchars($o['crop_name']) ?><br>
-                                        <small class="text-muted"><?= htmlspecialchars($o['crop_name_hi']) ?></small>
+                                        <?= e($o['crop_name']) ?><br>
+                                        <small class="text-muted"><?= e($o['crop_name_hi']) ?></small>
                                     </td>
                                     <td>
-                                        <?= htmlspecialchars($o['first_name']) ?><br>
-                                        <span class="text-muted small"><i class="fa-solid fa-phone"></i> <?= $o['farmer_phone'] ?></span>
+                                        <?= e($o['first_name']) ?><br>
+                                        <span class="text-muted small"><i class="fa-solid fa-phone"></i> <?= e($o['farmer_phone']) ?></span>
                                     </td>
                                     <td>
-                                        <?= $o['quantity_tons'] ?>
+                                        <?= e($o['quantity_tons']) ?>
                                         <small class="d-block text-muted">of <?= number_format($o['quantity_kg'] / 1000, 2) ?> Available</small>
                                     </td>
-                                    <td class="text-success fw-bold">₹<?= $o['offered_price_per_quintal'] ?>/qtl</td>
+                                    <td class="text-success fw-bold">₹<?= e($o['offered_price_per_quintal']) ?>/qtl</td>
                                     <td><?= date('d M Y, h:i A', strtotime($o['created_at'])) ?></td>
                                     <td>
                                         <?php 
@@ -48,7 +48,7 @@
                                             if($o['status'] == 'accepted') $bg = 'bg-success';
                                             if($o['status'] == 'rejected') $bg = 'bg-danger';
                                         ?>
-                                        <span class="badge <?= $bg ?>"><?= ucfirst($o['status']) ?></span>
+                                        <span class="badge <?= e($bg) ?>"><?= e(ucfirst($o['status'])) ?></span>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>

@@ -3,12 +3,12 @@
     <div class="d-flex justify-content-between align-items-center mb-5">
         <div>
             <h2 class="fw-bold text-dark mb-0">Dashboard</h2>
-            <p class="text-muted mb-0">Welcome back, <span class="fw-bold text-success"><?= htmlspecialchars($displayName) ?></span></p>
+            <p class="text-muted mb-0">Welcome back, <span class="fw-bold text-success"><?= e($displayName) ?></span></p>
         </div>
         <div>
             <span class="badge bg-light text-dark border px-3 py-2 fs-6 shadow-sm">
                 <i class="fa-solid fa-user-tag text-primary"></i> 
-                <?= ucfirst(str_replace('_', ' ', $userRole)) ?>
+                <?= e(ucfirst(str_replace('_', ' ', $userRole))) ?>
             </span>
         </div>
     </div>
@@ -26,7 +26,7 @@
                         <div class="mb-3">
                             <i class="fa-solid fa-user-circle fa-4x text-light"></i>
                         </div>
-                        <h5 class="fw-bold mb-0"><?= htmlspecialchars($displayName) ?></h5>
+                        <h5 class="fw-bold mb-0"><?= e($displayName) ?></h5>
                         <small class="text-success"><i class="fa-solid fa-circle" style="font-size: 8px;"></i> Verified Farmer</small>
                     </div>
                     <div class="list-group list-group-flush" id="farmer-nav-tab" role="tablist">
@@ -43,7 +43,7 @@
                                 foreach($myOrders as $o) if($o['status'] === 'pending') $pendingCount++; 
                             ?>
                             <?php if($pendingCount > 0): ?>
-                                <span class="badge bg-danger rounded-pill"><?= $pendingCount ?></span>
+                                <span class="badge bg-danger rounded-pill"><?= e($pendingCount) ?></span>
                             <?php endif; ?>
                         </a>
                         <a class="list-group-item list-group-item-action fw-bold py-3" href="<?= BASE_URL ?>/index.php?url=farmer/listProduce">
@@ -152,10 +152,10 @@
                                             <?php else: ?>
                                                 <?php foreach($myInventory as $inv): ?>
                                                     <tr>
-                                                        <td class="fw-bold"><?= htmlspecialchars($inv['crop_name']) ?></td>
+                                                        <td class="fw-bold"><?= e($inv['crop_name']) ?></td>
                                                         <td><?= number_format($inv['quantity_kg']/1000, 2) ?> Tons</td>
                                                         <td class="text-success fw-bold">₹<?= number_format($inv['expected_price_per_kg']*100, 2) ?>/qtl</td>
-                                                        <td><span class="badge bg-success"><?= ucfirst($inv['status']) ?></span></td>
+                                                        <td><span class="badge bg-success"><?= e(ucfirst($inv['status'])) ?></span></td>
                                                         <td><?= date('d M Y', strtotime($inv['created_at'])) ?></td>
                                                     </tr>
                                                 <?php endforeach; ?>
@@ -191,13 +191,13 @@
                                             <?php else: ?>
                                                 <?php foreach($myOrders as $bid): ?>
                                                     <tr>
-                                                        <td class="fw-bold"><?= htmlspecialchars($bid['crop_name']) ?></td>
+                                                        <td class="fw-bold"><?= e($bid['crop_name']) ?></td>
                                                         <td>
-                                                            <strong><?= htmlspecialchars($bid['company_name']) ?></strong><br>
-                                                            <small class="text-muted"><i class="fa-solid fa-location-dot"></i> <?= htmlspecialchars($bid['delivery_address']) ?></small>
+                                                            <strong><?= e($bid['company_name']) ?></strong><br>
+                                                            <small class="text-muted"><i class="fa-solid fa-location-dot"></i> <?= e($bid['delivery_address']) ?></small>
                                                         </td>
-                                                        <td><?= $bid['quantity_tons'] ?> Tons</td>
-                                                        <td class="text-success fw-bold">₹<?= $bid['offered_price_per_quintal'] ?>/qtl</td>
+                                                        <td><?= e($bid['quantity_tons']) ?> Tons</td>
+                                                        <td class="text-success fw-bold">₹<?= e($bid['offered_price_per_quintal']) ?>/qtl</td>
                                                         <td class="fw-bold text-dark">₹<?= number_format($bid['quantity_tons'] * 10 * $bid['offered_price_per_quintal'], 2) ?></td>
                                                         <td>
                                                             <?php 
@@ -206,14 +206,14 @@
                                                                 if($bid['status'] == 'accepted') $bg = 'bg-success';
                                                                 if($bid['status'] == 'rejected') $bg = 'bg-danger';
                                                             ?>
-                                                            <span class="badge <?= $bg ?>"><?= ucfirst($bid['status']) ?></span>
+                                                            <span class="badge <?= e($bg) ?>"><?= e(ucfirst($bid['status'])) ?></span>
                                                         </td>
                                                         <td>
                                                             <?php if($bid['status'] == 'pending'): ?>
-                                                                <button class="btn btn-sm btn-success update-bid-btn" data-id="<?= $bid['id'] ?>" data-status="accepted">Accept</button>
-                                                                <button class="btn btn-sm btn-outline-danger update-bid-btn" data-id="<?= $bid['id'] ?>" data-status="rejected">Reject</button>
+                                                                <button class="btn btn-sm btn-success update-bid-btn" data-id="<?= e($bid['id']) ?>" data-status="accepted">Accept</button>
+                                                                <button class="btn btn-sm btn-outline-danger update-bid-btn" data-id="<?= e($bid['id']) ?>" data-status="rejected">Reject</button>
                                                             <?php elseif($bid['status'] == 'accepted'): ?>
-                                                                <button class="btn btn-sm btn-primary" onclick="alert('Contact Buyer at <?= $bid['buyer_phone'] ?> to arrange dispatch.')">Contact</button>
+                                                                <button class="btn btn-sm btn-primary" onclick="alert(<?= e(json_encode('Contact Buyer at ' . ($bid['buyer_phone'] ?? '') . ' to arrange dispatch.', JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT)) ?>)">Contact</button>
                                                             <?php else: ?>
                                                                 -
                                                             <?php endif; ?>

@@ -14,7 +14,7 @@
                     <select class="form-select" id="crop">
                         <option value="">-- Choose crop --</option>
                         <?php foreach ($crops as $c): ?>
-                            <option value="<?= htmlspecialchars($c) ?>"><?= htmlspecialchars($c) ?></option>
+                            <option value="<?= e($c) ?>"><?= e($c) ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>

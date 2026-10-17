@@ -54,15 +54,15 @@
                         <div class="col-12">
                             <div class="card border-0 shadow-sm" style="border-left: 4px solid var(--secondary-orange);">
                                 <?php if(!empty($eq['image_path'])): ?>
-                                    <img src="<?= BASE_URL ?>/<?= htmlspecialchars($eq['image_path']) ?>" class="card-img-top" alt="Equipment" style="height: 120px; object-fit: cover;">
+                                    <img src="<?= BASE_URL ?>/<?= e($eq['image_path']) ?>" class="card-img-top" alt="Equipment" style="height: 120px; object-fit: cover;">
                                 <?php endif; ?>
                                 <div class="card-body py-2">
                                     <div class="d-flex justify-content-between align-items-center">
                                         <div>
-                                            <h6 class="fw-bold mb-0"><?= htmlspecialchars($eq['name']) ?></h6>
-                                            <small class="text-muted"><?= $eq['type'] ?> • ₹<?= $eq['rate_per_hour'] ?>/hr</small>
+                                            <h6 class="fw-bold mb-0"><?= e($eq['name']) ?></h6>
+                                            <small class="text-muted"><?= e($eq['type']) ?> • ₹<?= e($eq['rate_per_hour']) ?>/hr</small>
                                         </div>
-                                        <span class="badge <?= $eq['status'] == 'active' ? 'bg-success' : 'bg-danger' ?>"><?= ucfirst($eq['status']) ?></span>
+                                        <span class="badge <?= e($eq['status'] == 'active' ? 'bg-success' : 'bg-danger') ?>"><?= e(ucfirst($eq['status'])) ?></span>
                                     </div>
                                 </div>
                             </div>
@@ -96,11 +96,11 @@
                                 <?php else: ?>
                                     <?php foreach($bookings as $b): ?>
                                         <tr>
-                                            <td class="fw-bold"><?= htmlspecialchars($b['equipment_name']) ?></td>
-                                            <td><?= htmlspecialchars($b['farmer_phone']) ?></td>
-                                            <td><?= htmlspecialchars($b['location_address']) ?><br><small><?= $b['area'] ?> Acres</small></td>
+                                            <td class="fw-bold"><?= e($b['equipment_name']) ?></td>
+                                            <td><?= e($b['farmer_phone']) ?></td>
+                                            <td><?= e($b['location_address']) ?><br><small><?= e($b['area']) ?> Acres</small></td>
                                             <td><?= date('d M Y', strtotime($b['booking_date'])) ?></td>
-                                            <td><?= $b['duration_hours'] ?> Hrs<br><strong class="text-success">₹<?= $b['total_cost'] ?></strong></td>
+                                            <td><?= e($b['duration_hours']) ?> Hrs<br><strong class="text-success">₹<?= e($b['total_cost']) ?></strong></td>
                                             <td>
                                                 <?php 
                                                     $bg = 'bg-secondary';
@@ -108,14 +108,14 @@
                                                     if($b['status'] == 'confirmed') $bg = 'bg-info text-dark';
                                                     if($b['status'] == 'completed') $bg = 'bg-success';
                                                 ?>
-                                                <span class="badge <?= $bg ?>"><?= ucfirst($b['status']) ?></span>
+                                                <span class="badge <?= e($bg) ?>"><?= e(ucfirst($b['status'])) ?></span>
                                             </td>
                                             <td>
                                                 <?php if($b['status'] == 'pending'): ?>
-                                                    <button class="btn btn-sm btn-success update-status-btn" data-id="<?= $b['id'] ?>" data-status="confirmed">Confirm</button>
-                                                    <button class="btn btn-sm btn-danger update-status-btn" data-id="<?= $b['id'] ?>" data-status="cancelled">Reject</button>
+                                                    <button class="btn btn-sm btn-success update-status-btn" data-id="<?= e($b['id']) ?>" data-status="confirmed">Confirm</button>
+                                                    <button class="btn btn-sm btn-danger update-status-btn" data-id="<?= e($b['id']) ?>" data-status="cancelled">Reject</button>
                                                 <?php elseif($b['status'] == 'confirmed'): ?>
-                                                    <button class="btn btn-sm btn-primary update-status-btn" data-id="<?= $b['id'] ?>" data-status="completed">Mark Completed</button>
+                                                    <button class="btn btn-sm btn-primary update-status-btn" data-id="<?= e($b['id']) ?>" data-status="completed">Mark Completed</button>
                                                 <?php else: ?>
                                                     <span class="text-muted">-</span>
                                                 <?php endif; ?>

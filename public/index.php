@@ -88,6 +88,22 @@ if (isset($_GET['lang']) && in_array($_GET['lang'], ['en', 'hi', 'pa'])) {
 $currentLang = $_SESSION['lang'] ?? 'en';
 \App\Helpers\Translator::load($currentLang);
 
+// CSRF protection (L2). Every session gets a random token that the layout
+// sends back on each POST as the X-CSRF-Token header (see views/layouts/main.php).
+// POSTs without a matching token are rejected before any controller runs.
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
+    $sent = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? ($_POST['csrf_token'] ?? '');
+    if (!is_string($sent) || !hash_equals($_SESSION['csrf_token'], $sent)) {
+        http_response_code(403);
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'message' => 'Session expired. Please reload the page and try again.']);
+        exit;
+    }
+}
+
 // Super simple routing for Phase 1 Demo
 $url = isset($_GET['url']) ? rtrim($_GET['url'], '/') : 'home';
 $urlParts = explode('/', $url);

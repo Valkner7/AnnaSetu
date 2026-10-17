@@ -12,6 +12,24 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- Custom CSS -->
     <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/style.css?v=<?= time() ?>">
+    <meta name="csrf-token" content="<?= e($_SESSION['csrf_token'] ?? '') ?>">
+    <script>
+    // Attach the CSRF token to every same-origin POST made with fetch (L2).
+    (function () {
+        var token = document.querySelector('meta[name="csrf-token"]').content;
+        var nativeFetch = window.fetch;
+        window.fetch = function (input, init) {
+            init = init || {};
+            var method = (init.method || (input && input.method) || 'GET').toUpperCase();
+            if (method === 'POST') {
+                var headers = new Headers(init.headers || (input && input.headers) || {});
+                headers.set('X-CSRF-Token', token);
+                init.headers = headers;
+            }
+            return nativeFetch.call(this, input, init);
+        };
+    })();
+    </script>
 </head>
 <body>
 

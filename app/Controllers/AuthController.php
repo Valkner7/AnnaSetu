@@ -4,7 +4,18 @@ namespace App\Controllers;
 use App\Models\User;
 
 class AuthController {
-    
+
+    // Roles a user may choose for themselves at sign-up. Must match the
+    // options in views/auth/register.php. 'admin' is deliberately absent:
+    // it can only be granted directly in the database.
+    private const SELF_REGISTER_ROLES = [
+        'farmer',
+        'buyer',
+        'equipment_owner',
+        'storage_provider',
+        'transporter',
+    ];
+
     // Web Views
     public function loginView() {
         $title = "Login - SmartHarvest AI";
@@ -30,6 +41,13 @@ class AuthController {
             return;
         }
 
+        // Reject any role the sign-up form does not offer (L1). Checked before
+        // the account is created so a bad request leaves no role-less user.
+        if (!is_string($data['role']) || !in_array($data['role'], self::SELF_REGISTER_ROLES, true)) {
+            echo json_encode(['success' => false, 'message' => 'Invalid role selected.']);
+            return;
+        }
+
         $userModel = new User();
         
         // Check if phone already exists
@@ -47,6 +65,9 @@ class AuthController {
             $role = $userModel->getRoleByName($data['role']);
             if ($role) {
                 $userModel->assignRole($userId, $role['id']);
+            } else {
+                // Whitelisted role missing from the roles table: setup problem.
+                error_log('Register: role not found in roles table: ' . $data['role']);
             }
             
             // In a real mobile app API, you would generate a JWT token here.

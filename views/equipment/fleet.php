@@ -35,7 +35,8 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-bold">Equipment Photo</label>
-                            <input type="file" class="form-control" name="image" accept="image/*" required>
+                            <input type="file" class="form-control" name="image" accept="image/jpeg,image/png,image/webp" required>
+                            <div class="form-text">JPG, PNG or WebP, up to 2 MB.</div>
                             <small class="text-muted">A clear photo helps farmers trust your machinery.</small>
                         </div>
                         <button type="submit" class="btn btn-secondary-custom w-100" id="btnAddEq">Add to Fleet</button>

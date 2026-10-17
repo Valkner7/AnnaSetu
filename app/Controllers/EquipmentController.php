@@ -5,6 +5,7 @@ use App\Models\Equipment;
 use App\Models\EquipmentBooking;
 use App\Models\Land;
 use App\Core\Database;
+use App\Helpers\ImageUpload;
 
 class EquipmentController {
     
@@ -50,15 +51,13 @@ class EquipmentController {
         }
 
         $imagePath = null;
-        if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-            $uploadDir = __DIR__ . '/../../public/uploads/equipment/';
-            $fileName = time() . '_' . basename($_FILES['image']['name']);
-            if (move_uploaded_file($_FILES['image']['tmp_name'], $uploadDir . $fileName)) {
-                $imagePath = 'uploads/equipment/' . $fileName;
-            } else {
-                echo json_encode(['success' => false, 'message' => 'Failed to upload image.']);
+        if (isset($_FILES['image']) && $_FILES['image']['error'] !== UPLOAD_ERR_NO_FILE) {
+            $upload = ImageUpload::save($_FILES['image'], 'equipment');
+            if (!$upload['ok']) {
+                echo json_encode(['success' => false, 'message' => $upload['error']]);
                 return;
             }
+            $imagePath = $upload['path'];
         }
 
         $db = Database::getInstance()->getConnection();

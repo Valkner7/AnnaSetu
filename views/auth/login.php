@@ -62,8 +62,6 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
         
         if (result.success) {
             showToast('success', result.message);
-            // Save token (Simulation for web)
-            localStorage.setItem('auth_token', result.token);
             setTimeout(() => {
                 window.location.href = '<?= BASE_URL ?>/index.php?url=dashboard'; 
             }, 1000);

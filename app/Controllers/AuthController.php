@@ -70,12 +70,10 @@ class AuthController {
                 error_log('Register: role not found in roles table: ' . $data['role']);
             }
             
-            // In a real mobile app API, you would generate a JWT token here.
-            // For now, we return a success response with a simulated token.
+            // No API token is issued until real token auth exists (L3).
             echo json_encode([
                 'success' => true, 
                 'message' => 'Registration successful.',
-                'token' => 'simulated_jwt_token_for_mobile_' . $userId,
                 'user' => [
                     'id' => $userId,
                     'first_name' => $data['first_name'],
@@ -104,9 +102,6 @@ class AuthController {
 
         if ($user && password_verify($data['password'], $user['password_hash'])) {
             
-            // Generate simulated JWT Token for mobile/web session
-            $token = 'simulated_jwt_token_for_mobile_' . $user['id'];
-            
             // If it's a web request (checking a custom header could be better, but session works for web)
             if (session_status() === PHP_SESSION_NONE) {
                 session_start();
@@ -120,7 +115,6 @@ class AuthController {
             echo json_encode([
                 'success' => true,
                 'message' => 'Login successful',
-                'token' => $token,
                 'user' => [
                     'id' => $user['id'],
                     'first_name' => $user['first_name'],

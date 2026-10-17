@@ -2,6 +2,7 @@
 namespace App\Controllers;
 
 use App\Core\Database;
+use App\Helpers\Validator;
 use App\Models\ProcurementOrder;
 use PDO;
 
@@ -58,16 +59,39 @@ class BuyerController {
             return;
         }
 
+        // Validate every field server-side (N4): ids are integers, quantity and the
+        // offered price are positive numbers in a sane range, the listing is active
+        // and the buyer cannot ask for more than the farmer has listed.
+        $listingId = Validator::id($data['listing_id']);
+        $qty       = Validator::number($data['quantity'], 0.01, 100000);   // tons
+        $price     = Validator::number($data['price'], 0.01, 10000000);    // Rs per quintal
+        if ($listingId === null || $qty === null || $price === null) {
+            echo json_encode(['success' => false, 'message' => 'Enter a valid quantity and price.']);
+            return;
+        }
+        $db = Database::getInstance()->getConnection();
+        $stmt = $db->prepare("SELECT quantity_kg FROM crop_listings WHERE id = ? AND status = 'active'");
+        $stmt->execute([$listingId]);
+        $listing = $stmt->fetch();
+        if (!$listing) {
+            echo json_encode(['success' => false, 'message' => 'This listing is no longer available.']);
+            return;
+        }
+        if ($qty * 1000 > (float)$listing['quantity_kg']) {
+            echo json_encode(['success' => false, 'message' => 'Quantity is more than the farmer has listed.']);
+            return;
+        }
+
         if (!isset($_SESSION['buyer_cart'])) {
             $_SESSION['buyer_cart'] = [];
         }
 
         // Add to cart session
-        $_SESSION['buyer_cart'][$data['listing_id']] = [
-            'listing_id' => $data['listing_id'],
-            'quantity' => $data['quantity'],
-            'price' => $data['price'],
-            'name' => $data['name'] ?? 'Crop'
+        $_SESSION['buyer_cart'][$listingId] = [
+            'listing_id' => $listingId,
+            'quantity' => $qty,
+            'price' => $price,
+            'name' => Validator::text($data['name'] ?? '', 100) ?? 'Crop'
         ];
 
         echo json_encode(['success' => true, 'message' => 'Added to Procurement Cart!']);

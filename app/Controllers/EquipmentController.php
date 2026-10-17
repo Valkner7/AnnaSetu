@@ -1,6 +1,7 @@
 <?php
 namespace App\Controllers;
 
+use App\Helpers\Validator;
 use App\Models\Equipment;
 use App\Models\EquipmentBooking;
 use App\Models\Land;
@@ -49,6 +50,14 @@ class EquipmentController {
             echo json_encode(['success' => false, 'message' => 'All fields are required.']);
             return;
         }
+        // Server-side validation (N4).
+        $eqName = Validator::text($_POST['name'], 100);
+        $eqType = Validator::text($_POST['type'], 50);
+        $eqRate = Validator::number($_POST['rate_per_hour'], 1, 100000);   // Rs per hour
+        if ($eqName === null || $eqType === null || $eqRate === null) {
+            echo json_encode(['success' => false, 'message' => 'Enter a valid name, type and hourly rate.']);
+            return;
+        }
 
         $imagePath = null;
         if (isset($_FILES['image']) && $_FILES['image']['error'] !== UPLOAD_ERR_NO_FILE) {
@@ -62,7 +71,7 @@ class EquipmentController {
 
         $db = Database::getInstance()->getConnection();
         $stmt = $db->prepare("INSERT INTO equipments (owner_id, name, type, rate_per_hour, image_path) VALUES (?, ?, ?, ?, ?)");
-        $success = $stmt->execute([$_SESSION['user_id'], $_POST['name'], $_POST['type'], $_POST['rate_per_hour'], $imagePath]);
+        $success = $stmt->execute([$_SESSION['user_id'], $eqName, $eqType, $eqRate, $imagePath]);
 
         echo json_encode(['success' => $success, 'message' => $success ? 'Equipment added!' : 'Database error.']);
     }
@@ -79,6 +88,13 @@ class EquipmentController {
             echo json_encode(['success' => false, 'message' => 'Missing data.']);
             return;
         }
+        // Only real booking statuses, and a real id (N4).
+        $bookingId = Validator::id($data['booking_id']);
+        $status    = Validator::oneOf($data['status'], ['confirmed', 'completed', 'cancelled']);
+        if ($bookingId === null || $status === null) {
+            echo json_encode(['success' => false, 'message' => 'Invalid data.']);
+            return;
+        }
 
         $db = Database::getInstance()->getConnection();
         // Verify owner owns this equipment booking
@@ -88,7 +104,7 @@ class EquipmentController {
             SET b.status = ? 
             WHERE b.id = ? AND e.owner_id = ?
         ");
-        $success = $stmt->execute([$data['status'], $data['booking_id'], $_SESSION['user_id']]);
+        $success = $stmt->execute([$status, $bookingId, $_SESSION['user_id']]);
 
         echo json_encode(['success' => $success, 'message' => $success ? 'Status updated!' : 'Failed.']);
     }
@@ -128,6 +144,18 @@ class EquipmentController {
             return;
         }
 
+        // Server-side validation (N4): real ids, a future date, 1 to 720 hours.
+        $equipmentId = Validator::id($data['equipment_id']);
+        $landId      = Validator::id($data['land_id']);
+        $bookingDate = Validator::date($data['booking_date'], true);
+        $hours       = Validator::number($data['duration_hours'], 0.5, 720);
+        if ($equipmentId === null || $landId === null || $bookingDate === null || $hours === null) {
+            echo json_encode(['success' => false, 'message' => 'Enter a valid date (not in the past) and duration.']);
+            return;
+        }
+        $data['equipment_id'] = $equipmentId;
+        $data['land_id'] = $landId;
+
         // The land must belong to the farmer who is booking (N3). Without this a
         // farmer could name someone else's land and the owner would see its address.
         if (!(new Land())->belongsToUser($data['land_id'], $_SESSION['user_id'])) {
@@ -146,15 +174,15 @@ class EquipmentController {
             return;
         }
         
-        $totalCost = $eq['rate_per_hour'] * $data['duration_hours'];
+        $totalCost = $eq['rate_per_hour'] * $hours;
 
         $insert = $db->prepare("INSERT INTO equipment_bookings (equipment_id, farmer_id, land_id, booking_date, duration_hours, total_cost) VALUES (?, ?, ?, ?, ?, ?)");
         $success = $insert->execute([
             $data['equipment_id'], 
             $_SESSION['user_id'], 
             $data['land_id'], 
-            $data['booking_date'], 
-            $data['duration_hours'],
+            $bookingDate, 
+            $hours,
             $totalCost
         ]);
 

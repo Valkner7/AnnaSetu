@@ -1,6 +1,7 @@
 <?php
 namespace App\Controllers;
 
+use App\Helpers\Validator;
 use App\Models\Land;
 use App\Models\Crop;
 
@@ -119,8 +120,18 @@ class ProfileController {
             return;
         }
 
+        // Server-side validation (N4).
+        $area = Validator::number($data['area'], 0.01, 100000);
+        $soil = Validator::text($data['soil_type'], 50);
+        $irrigation = Validator::oneOf($data['irrigation_type'] ?? 'rainfed', ['rainfed', 'tubewell', 'canal']);
+        $location = isset($data['location']) && $data['location'] !== '' ? Validator::text($data['location'], 255) : '';
+        if ($area === null || $soil === null || $irrigation === null || $location === null) {
+            echo json_encode(['success' => false, 'message' => 'Enter a valid area, soil type and location.']);
+            return;
+        }
+
         $landModel = new Land();
-        $success = $landModel->addLand($_SESSION['user_id'], $data['area'], $data['soil_type'], $data['irrigation_type'] ?? 'rainfed', $data['location'] ?? '');
+        $success = $landModel->addLand($_SESSION['user_id'], $area, $soil, $irrigation, $location);
         
         if ($success) {
             echo json_encode(['success' => true, 'message' => 'Land added successfully.']);
@@ -142,6 +153,16 @@ class ProfileController {
             return;
         }
 
+        // Server-side validation (N4).
+        $sowing = Validator::date($data['sowing_date']);
+        $areaAlloc = Validator::number($data['area_allocated'], 0.01, 100000);
+        $data['land_id'] = Validator::id($data['land_id']);
+        $data['crop_id'] = Validator::id($data['crop_id']);
+        if ($sowing === null || $areaAlloc === null || $data['land_id'] === null || $data['crop_id'] === null) {
+            echo json_encode(['success' => false, 'message' => 'Enter a valid sowing date and area.']);
+            return;
+        }
+
         // The land must be the farmer's own, and the crop must exist (N3).
         if (!(new Land())->belongsToUser($data['land_id'], $_SESSION['user_id'])) {
             echo json_encode(['success' => false, 'message' => 'Invalid land selection.']);
@@ -152,7 +173,7 @@ class ProfileController {
             echo json_encode(['success' => false, 'message' => 'Invalid crop selection.']);
             return;
         }
-        $success = $cropModel->addFarmerCrop($_SESSION['user_id'], $data['land_id'], $data['crop_id'], $data['sowing_date'], $data['area_allocated']);
+        $success = $cropModel->addFarmerCrop($_SESSION['user_id'], $data['land_id'], $data['crop_id'], $sowing, $areaAlloc);
         
         if ($success) {
             echo json_encode(['success' => true, 'message' => 'Crop added successfully.']);

@@ -1,6 +1,7 @@
 <?php
 namespace App\Controllers;
 
+use App\Helpers\Validator;
 use App\Models\Crop;
 use App\Models\Land;
 use App\Core\Database;
@@ -86,11 +87,22 @@ class FarmerController {
             return;
         }
 
+        // Server-side validation (N4).
+        $cropId = Validator::id($data['farmer_crop_id']);
+        $qtyKg  = Validator::number($data['quantity_kg'], 0.01, 10000000);
+        $price  = Validator::number($data['expected_price'], 0.01, 100000);   // Rs per kg
+        $harvest = isset($data['harvest_date']) && $data['harvest_date'] !== '' ? Validator::date($data['harvest_date']) : null;
+        if ($cropId === null || $qtyKg === null || $price === null
+            || (isset($data['harvest_date']) && $data['harvest_date'] !== '' && $harvest === null)) {
+            echo json_encode(['success' => false, 'message' => 'Enter a valid quantity, price and harvest date.']);
+            return;
+        }
+
         $db = Database::getInstance()->getConnection();
         
         // Fetch the crop details to set the harvest date
         $stmtCrop = $db->prepare("SELECT expected_harvest_date FROM farmer_crops WHERE id = ? AND user_id = ?");
-        $stmtCrop->execute([$data['farmer_crop_id'], $_SESSION['user_id']]);
+        $stmtCrop->execute([$cropId, $_SESSION['user_id']]);
         $crop = $stmtCrop->fetch();
 
         if (!$crop) {
@@ -101,10 +113,10 @@ class FarmerController {
         $stmt = $db->prepare("INSERT INTO crop_listings (user_id, farmer_crop_id, quantity_kg, expected_price_per_kg, harvest_date) VALUES (?, ?, ?, ?, ?)");
         $success = $stmt->execute([
             $_SESSION['user_id'], 
-            $data['farmer_crop_id'], 
-            $data['quantity_kg'], 
-            $data['expected_price'], 
-            $data['harvest_date'] ?? $crop['expected_harvest_date']
+            $cropId, 
+            $qtyKg, 
+            $price, 
+            $harvest ?? $crop['expected_harvest_date']
         ]);
 
         if ($success) {
@@ -122,6 +134,13 @@ class FarmerController {
             echo json_encode(['success' => false, 'message' => 'Invalid parameters.']);
             return;
         }
+        // Only real order statuses, and a real id (N4).
+        $orderId = Validator::id($data['order_id']);
+        $status  = Validator::oneOf($data['status'], ['accepted', 'rejected', 'completed']);
+        if ($orderId === null || $status === null) {
+            echo json_encode(['success' => false, 'message' => 'Invalid parameters.']);
+            return;
+        }
 
         $db = Database::getInstance()->getConnection();
         
@@ -132,7 +151,7 @@ class FarmerController {
             JOIN crop_listings cl ON po.crop_listing_id = cl.id
             WHERE po.id = ? AND cl.user_id = ?
         ");
-        $stmt->execute([$data['order_id'], $_SESSION['user_id']]);
+        $stmt->execute([$orderId, $_SESSION['user_id']]);
         if (!$stmt->fetch()) {
             echo json_encode(['success' => false, 'message' => 'Unauthorized or order not found.']);
             return;
@@ -140,7 +159,7 @@ class FarmerController {
 
         // Update the status
         $updateStmt = $db->prepare("UPDATE procurement_orders SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?");
-        $success = $updateStmt->execute([$data['status'], $data['order_id']]);
+        $success = $updateStmt->execute([$status, $orderId]);
 
         echo json_encode(['success' => $success, 'message' => $success ? 'Order updated.' : 'Database error.']);
     }

@@ -1,5 +1,6 @@
 # Local config with credentials
 config/database.php
+config/mandi.local.php
 
 # User uploads and runtime files
 public/uploads/*

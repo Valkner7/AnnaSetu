@@ -64,7 +64,7 @@
 </div>
 <script>
 (function () {
-    var BASE = '<?= BASE_URL ?>/index.php?url=mandi/';
+    var BASE = <?= json_encode(BASE_URL . '/index.php?url=mandi/', JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
     var token = 0;
     function el(id) { return document.getElementById(id); }
     function showStatus(msg, type) {

@@ -22,8 +22,10 @@ class Database {
         try {
             $this->pdo = new PDO($dsn, $config['username'], $config['password'], $options);
         } catch (PDOException $e) {
-            // In production, log this error instead of displaying it
-            die("Database connection failed: " . $e->getMessage());
+            // Log the detail server-side; never show host/user details to visitors (L4).
+            error_log('Database connection failed: ' . $e->getMessage());
+            http_response_code(500);
+            die('Service temporarily unavailable. Please try again later.');
         }
     }
 

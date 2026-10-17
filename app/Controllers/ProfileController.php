@@ -97,9 +97,21 @@ class ProfileController {
         echo json_encode(['success' => $success, 'message' => $success ? 'Profile saved successfully!' : 'Database error.']);
     }
 
+    // Only farmers own land and crops (N3). Sends the JSON error itself.
+    private function requireFarmer(): bool {
+        if (($_SESSION['user_role'] ?? '') !== 'farmer') {
+            echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+            return false;
+        }
+        return true;
+    }
+
     // API to Add Land
     public function addLand() {
         header('Content-Type: application/json');
+        if (!$this->requireFarmer()) {
+            return;
+        }
         $data = json_decode(file_get_contents('php://input'), true) ?? $_POST;
 
         if (empty($data['area']) || empty($data['soil_type'])) {
@@ -120,6 +132,9 @@ class ProfileController {
     // API to Add Crop
     public function addCrop() {
         header('Content-Type: application/json');
+        if (!$this->requireFarmer()) {
+            return;
+        }
         $data = json_decode(file_get_contents('php://input'), true) ?? $_POST;
 
         if (empty($data['land_id']) || empty($data['crop_id']) || empty($data['sowing_date']) || empty($data['area_allocated'])) {
@@ -127,7 +142,16 @@ class ProfileController {
             return;
         }
 
+        // The land must be the farmer's own, and the crop must exist (N3).
+        if (!(new Land())->belongsToUser($data['land_id'], $_SESSION['user_id'])) {
+            echo json_encode(['success' => false, 'message' => 'Invalid land selection.']);
+            return;
+        }
         $cropModel = new Crop();
+        if (!$cropModel->masterCropExists($data['crop_id'])) {
+            echo json_encode(['success' => false, 'message' => 'Invalid crop selection.']);
+            return;
+        }
         $success = $cropModel->addFarmerCrop($_SESSION['user_id'], $data['land_id'], $data['crop_id'], $data['sowing_date'], $data['area_allocated']);
         
         if ($success) {

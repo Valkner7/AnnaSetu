@@ -128,6 +128,13 @@ class EquipmentController {
             return;
         }
 
+        // The land must belong to the farmer who is booking (N3). Without this a
+        // farmer could name someone else's land and the owner would see its address.
+        if (!(new Land())->belongsToUser($data['land_id'], $_SESSION['user_id'])) {
+            echo json_encode(['success' => false, 'message' => 'Invalid land selection.']);
+            return;
+        }
+
         $db = Database::getInstance()->getConnection();
         
         // Calculate cost

@@ -18,6 +18,7 @@ $cfText = [
         </h2>
         <p class="text-muted"><?= e(__('cf_desc')) ?></p>
     </div>
+    <?php $mandiActive = 'compare'; require __DIR__ . '/_nav.php'; ?>
 
     <div class="card shadow-sm border-0 mb-4" style="border-top: 3px solid var(--primary-orange);">
         <div class="card-body p-4">

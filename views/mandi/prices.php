@@ -4,8 +4,8 @@
             <i class="fa-solid fa-chart-line"></i> <?= e(__('mp_title')) ?>
         </h2>
         <p class="text-muted"><?= e(__('mp_subtitle')) ?></p>
-        <a class="btn btn-outline-success btn-sm" href="<?= BASE_URL ?>/index.php?url=mandi/compare"><i class="fa-solid fa-code-compare"></i> <?= e(__('cf_title')) ?></a>
     </div>
+    <?php $mandiActive = 'prices'; require __DIR__ . '/_nav.php'; ?>
 
     <div class="card shadow-sm border-0 mb-4" style="border-top: 3px solid var(--primary-orange);">
         <div class="card-body p-4">

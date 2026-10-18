@@ -10,6 +10,10 @@ namespace App\Helpers;
  *      environment variables is awkward)
  *   3. the default below
  *
+ * The optional shared secret (M10) follows the same order: environment variable
+ * MANDI_API_SECRET, then 'api_secret' in config/mandi.local.php, else none.
+ * It is only ever sent to the price service's advisory endpoints.
+ *
  * An address that is not usable is ignored with a log line, so a typo can
  * never point the app at something unexpected: the next source is used.
  */
@@ -18,13 +22,14 @@ class MandiConfig {
     public const DEFAULT_API_BASE = 'https://mandi-price-forecast-1.onrender.com';
 
     // Only these keys may be overridden from the local file.
-    private const KEYS = ['api_base', 'timeout_seconds', 'connect_timeout_seconds', 'cache_ttl_seconds'];
+    private const KEYS = ['api_base', 'timeout_seconds', 'connect_timeout_seconds', 'cache_ttl_seconds', 'api_secret'];
 
     /**
      * @param string      $localFile Path to the optional local override file.
      * @param string|null $envValue  Value of MANDI_API_BASE (null/'' = not set).
+     * @param string|null $secretEnv Value of MANDI_API_SECRET (null/'' = not set).
      */
-    public static function load(string $localFile, ?string $envValue = null): array {
+    public static function load(string $localFile, ?string $envValue = null, ?string $secretEnv = null): array {
         $cfg = [
             'api_base' => self::DEFAULT_API_BASE,
             'timeout_seconds' => 90,
@@ -32,6 +37,8 @@ class MandiConfig {
             // Cache upstream answers for 4 hours (prices change once a day). The last
             // good copy is still served, marked stale, if the service is down.
             'cache_ttl_seconds' => 14400,
+            // Shared secret for the advisory endpoints (M10). '' = none.
+            'api_secret' => '',
         ];
 
         if (is_file($localFile)) {
@@ -45,6 +52,13 @@ class MandiConfig {
                         $clean = self::cleanBase($local[$k]);
                         if ($clean === null) {
                             error_log('MandiConfig: ignoring unusable api_base in ' . basename($localFile));
+                            continue;
+                        }
+                        $cfg[$k] = $clean;
+                    } elseif ($k === 'api_secret') {
+                        $clean = self::cleanSecret($local[$k]);
+                        if ($clean === null) {
+                            error_log('MandiConfig: ignoring unusable api_secret in ' . basename($localFile));
                             continue;
                         }
                         $cfg[$k] = $clean;
@@ -63,7 +77,29 @@ class MandiConfig {
                 $cfg['api_base'] = $clean;
             }
         }
+
+        if ($secretEnv !== null && trim($secretEnv) !== '') {
+            $clean = self::cleanSecret($secretEnv);
+            if ($clean === null) {
+                error_log('MandiConfig: ignoring unusable MANDI_API_SECRET');
+            } else {
+                $cfg['api_secret'] = $clean;
+            }
+        }
         return $cfg;
+    }
+
+    /**
+     * A secret is sent as an HTTP header value, so it must be plain printable
+     * ASCII with no spaces (no line breaks: that would allow header injection),
+     * 8 to 200 characters. The value is never written to a log.
+     */
+    public static function cleanSecret($value): ?string {
+        if (!is_string($value)) {
+            return null;
+        }
+        $value = trim($value);
+        return preg_match('/^[\x21-\x7E]{8,200}$/', $value) ? $value : null;
     }
 
     /**

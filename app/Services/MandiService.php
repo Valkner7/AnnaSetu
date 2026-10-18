@@ -7,6 +7,7 @@ class MandiService {
     private $connectTimeout;
     private $cacheDir;
     private $cacheTtl;
+    private $apiSecret;
 
     /**
      * @param array|null $override Optional config overrides (used by tests).
@@ -20,8 +21,13 @@ class MandiService {
         $this->timeout = $cfg['timeout_seconds'] ?? 90;
         $this->connectTimeout = $cfg['connect_timeout_seconds'] ?? 20;
         $this->cacheTtl = (int) ($cfg['cache_ttl_seconds'] ?? 14400);
+        $this->apiSecret = is_string($cfg['api_secret'] ?? null) ? $cfg['api_secret'] : '';
         $this->cacheDir = rtrim($cfg['cache_dir'] ?? (__DIR__ . '/../../storage/cache/mandi'), '/\\');
     }
+
+    // Endpoints that spend Gemini / text-to-speech quota. The shared secret (M10)
+    // is sent to these and to nothing else.
+    public const SECRET_PATHS = ['/advisory', '/compare-advisory', '/voice-advisory'];
 
     // Used only when the price service has never been reachable (no cache yet).
     // The service's own list (/meta -> reliable_crops) is the source of truth.
@@ -150,6 +156,15 @@ class MandiService {
         }
     }
 
+    /** Headers for one upstream request. The secret goes only to SECRET_PATHS. */
+    protected function requestHeaders($path) {
+        $headers = ['Accept: application/json'];
+        if ($this->apiSecret !== '' && in_array($path, self::SECRET_PATHS, true)) {
+            $headers[] = 'X-Api-Secret: ' . $this->apiSecret;
+        }
+        return $headers;
+    }
+
     protected function fetchRemote($path, $params = []) {
         $url = $this->base . $path;
         if ($params) {
@@ -160,7 +175,7 @@ class MandiService {
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_TIMEOUT => $this->timeout,
             CURLOPT_CONNECTTIMEOUT => $this->connectTimeout,
-            CURLOPT_HTTPHEADER => ['Accept: application/json'],
+            CURLOPT_HTTPHEADER => $this->requestHeaders($path),
         ]);
         $body = curl_exec($ch);
         $errno = curl_errno($ch);

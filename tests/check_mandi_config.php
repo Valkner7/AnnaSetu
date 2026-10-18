@@ -62,6 +62,33 @@ $svc = new \App\Services\MandiService(['cache_dir' => $tmp . '/cache']);
 $r = new ReflectionProperty($svc, 'base'); $r->setAccessible(true);
 check('MandiService reads the address from config/mandi.php', $r->getValue($svc) === $D, $r->getValue($svc));
 
+
+// --- shared secret (M10) ---
+$S = 'abcd1234efgh5678';
+check('no secret by default', MandiConfig::load($none)['api_secret'] === '');
+check('secret from env var', MandiConfig::load($none, null, $S)['api_secret'] === $S);
+check('secret from local file', MandiConfig::load(localFile($tmp, "<?php return ['api_secret' => '$S'];"))['api_secret'] === $S);
+check('env secret beats local file', MandiConfig::load(localFile($tmp, "<?php return ['api_secret' => 'local-secret-1234'];"), null, $S)['api_secret'] === $S);
+check('secret is trimmed', MandiConfig::load($none, null, "  $S \n")['api_secret'] === $S);
+foreach (['short', 'has space inside 123', "line\r\nbreak-12345", "tab\there12345", str_repeat('a', 201), "caf\xc3\xa9-secret-123", 5, null, ['x']] as $i => $bad) {
+    check('rejects unsafe secret #' . $i, MandiConfig::cleanSecret($bad) === null, var_export(MandiConfig::cleanSecret($bad), true));
+}
+check('bad env secret falls back to local file', MandiConfig::load(localFile($tmp, "<?php return ['api_secret' => '$S'];"), null, 'bad value')['api_secret'] === $S);
+check('bad env secret alone -> none', MandiConfig::load($none, null, 'no')['api_secret'] === '');
+
+class HeaderProbe extends \App\Services\MandiService {
+    public function headers($path) { return $this->requestHeaders($path); }
+}
+$withSecret = new HeaderProbe(['cache_dir' => $tmp . '/cache', 'api_secret' => $S]);
+$without    = new HeaderProbe(['cache_dir' => $tmp . '/cache', 'api_secret' => '']);
+foreach (['/advisory', '/compare-advisory', '/voice-advisory'] as $p) {
+    check("secret sent to $p", in_array("X-Api-Secret: $S", $withSecret->headers($p), true));
+    check("no header to $p when no secret is set", $without->headers($p) === ['Accept: application/json']);
+}
+foreach (['/meta', '/predict', '/history', '/status', '/advisory/../meta', '/advisory2'] as $p) {
+    check("secret NOT sent to $p", $withSecret->headers($p) === ['Accept: application/json']);
+}
+
 foreach (glob($tmp . '/*') as $x) { is_file($x) && unlink($x); } @rmdir($tmp);
 fwrite(STDOUT, $fails === 0 ? "\nOK: all config checks passed.\n" : "\n$fails check(s) FAILED.\n");
 exit($fails === 0 ? 0 : 1);

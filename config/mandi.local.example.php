@@ -8,4 +8,7 @@ return [
     // 'timeout_seconds' => 90,
     // 'connect_timeout_seconds' => 20,
     // 'cache_ttl_seconds' => 14400,
+    // Same value as API_SHARED_SECRET on the price service (8-200 visible characters, no spaces).
+    // Only sent to the advisory endpoints. Never commit it.
+    // 'api_secret' => '',
 ];

@@ -30,7 +30,7 @@ return [
     'save_crop' => 'Save Crop',
     
     // Crop Planning
-    'ai_crop_planning' => 'AI Crop Planning',
+    'ai_crop_planning' => 'Crop Price Comparison',
     'ai_planning_desc' => 'Get AI-assisted recommendations based on your land and soil type.',
     'farm_details' => 'Farm Details',
     'budget' => 'Budget (₹)',
@@ -95,5 +95,28 @@ return [
     'mp_data_note' => 'Most recent available record is from {date} ({days} days ago). Forecast is projected forward from that date, not from today.',
     'mp_crop_potato' => 'Potato',
     'mp_crop_onion' => 'Onion',
-    'mp_crop_tomato' => 'Tomato'
+    'mp_crop_tomato' => 'Tomato',
+
+    // Crop price comparison (F2)
+    'cp_title' => 'Crop Price Comparison',
+    'cp_desc' => 'Compare what each crop has actually sold for at a mandi over the past year. This shows past prices only; it does not predict your harvest income.',
+    'cp_compare' => 'Compare crops',
+    'cp_loading' => 'Loading past prices... the price service can take up to a minute to wake up.',
+    'cp_err' => 'Could not load prices. Please try again.',
+    'cp_no_data' => 'Not enough price records for this crop at this mandi.',
+    'cp_unavailable' => 'Price service not reachable for this crop.',
+    'cp_last_price' => 'Last reported price: ₹{price}/qtl on {date}',
+    'cp_avg30' => 'Average of the last 30 days: ₹{price}/qtl',
+    'cp_above' => 'About {pct}% above the average of the period ({days} days)',
+    'cp_below' => 'About {pct}% below the average of the period ({days} days)',
+    'cp_change_up' => 'Up {pct}% compared with about 3 months earlier',
+    'cp_change_down' => 'Down {pct}% compared with about 3 months earlier',
+    'cp_swing' => 'Price swings: {level}',
+    'cp_swing_low' => 'low',
+    'cp_swing_medium' => 'medium',
+    'cp_swing_high' => 'high',
+    'cp_stale' => 'Prices were last updated on {date} ({days} days ago).',
+    'cp_served_stale' => 'The price service is not reachable; showing saved data.',
+    'cp_disclaimer' => 'Past prices do not guarantee future prices. Check with your local mandi before deciding what to sow.',
+    'cp_view_prices' => 'See live prices and forecast'
 ];

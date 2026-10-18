@@ -5,6 +5,10 @@ use App\Helpers\Validator;
 use App\Models\Crop;
 use App\Models\Land;
 use App\Core\Database;
+use App\Helpers\CropOutlook;
+use App\Helpers\MandiText;
+use App\Helpers\Translator;
+use App\Services\MandiService;
 
 class FarmerController {
     
@@ -18,54 +22,65 @@ class FarmerController {
         }
     }
 
-    // --- CROP PLANNING (AI SIMULATION) ---
+    // --- CROP PLANNING: PRICE COMPARISON (F2) ---
     public function cropPlanning() {
-        $landModel = new Land();
-        $lands = $landModel->getLandsByUser($_SESSION['user_id']);
-        
-        $title = "AI Crop Planning - SmartHarvest AI";
+        $crops = $this->mandiService()->getReliableCrops(false);   // cache only: never wait on a cold start
+        $title = "Crop Planning - SmartHarvest AI";
         $contentView = __DIR__ . '/../../views/farmer/crop_planning.php';
         require_once __DIR__ . '/../../views/layouts/main.php';
     }
 
+    /** Overridable so tests can inject a fake price service. */
+    protected function mandiService() {
+        return new MandiService();
+    }
+
+    /**
+     * Real past prices for every forecastable crop in one mandi. Replaces the
+     * old simulated Tomato/Onion answer. Returns figures about what already
+     * happened (see CropOutlook); it never invents yield or revenue.
+     */
     public function getAiRecommendation() {
         header('Content-Type: application/json');
-        $data = json_decode(file_get_contents('php://input'), true) ?? $_POST;
-        
-        // In a real scenario, this makes a cURL request to the Python FastAPI microservice.
-        // For Phase 3, we simulate the AI response based on the prompt's requirements.
-        
-        // Simulated Python AI Response
-        $aiResponse = [
-            'success' => true,
-            'recommendations' => [
-                [
-                    'crop' => 'Tomato',
-                    'crop_hi' => 'टमाटर',
-                    'suitability_score' => 92,
-                    'expected_duration' => '90-100 Days',
-                    'water_requirement' => 'Medium',
-                    'estimated_yield' => '10 - 12 Tons/Acre',
-                    'estimated_revenue' => '₹1,50,000 - ₹2,00,000',
-                    'risk_level' => 'Low',
-                    'reason' => 'Perfect for current soil type and upcoming weather patterns.'
-                ],
-                [
-                    'crop' => 'Onion',
-                    'crop_hi' => 'प्याज',
-                    'suitability_score' => 85,
-                    'expected_duration' => '110-120 Days',
-                    'water_requirement' => 'Low',
-                    'estimated_yield' => '8 - 10 Tons/Acre',
-                    'estimated_revenue' => '₹1,20,000 - ₹1,80,000',
-                    'risk_level' => 'Medium',
-                    'reason' => 'Good market demand, but requires proper storage.'
-                ]
-            ],
-            'disclaimer' => '* AI predictions are estimates based on historical data and do not guarantee outcomes.'
-        ];
+        $data = json_decode(file_get_contents('php://input'), true);
+        if (!is_array($data)) {
+            $data = $_POST;
+        }
+        $mandi = is_string($data['mandi'] ?? null) ? trim($data['mandi']) : '';
+        if ($mandi === '' || strlen($mandi) > 80 || preg_match('/[\x00-\x1F\x7F]/', $mandi)) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'choose_mandi']);
+            return;
+        }
+        session_write_close();      // the price service can be slow; do not hold the session lock
 
-        echo json_encode($aiResponse);
+        $svc = $this->mandiService();
+        $today = date('Y-m-d');
+        $t = function ($k) { return Translator::get($k); };
+        $rows = [];
+        $stale = false;
+        $anyReached = false;
+        foreach ($svc->getReliableCrops() as $crop) {
+            $res = $svc->getHistory($crop, $mandi, 365);
+            $row = ['crop' => $crop, 'label' => MandiText::cropLabel($crop, $t), 'status' => 'no_data'];
+            if ($res['ok']) {
+                $anyReached = true;
+                $stale = $stale || !empty($res['stale']);
+                $row = array_merge($row, CropOutlook::summarize($res['data']['points'] ?? [], $today));
+            } elseif ($res['status'] === 0 || $res['status'] >= 500) {
+                $row['status'] = 'unavailable';
+            } else {
+                $anyReached = true;     // 404/422: the service answered, this crop is not sold here
+            }
+            $rows[] = $row;
+        }
+        if (!$anyReached) {
+            http_response_code(502);
+            echo json_encode(['success' => false, 'error' => 'service_down']);
+            return;
+        }
+        echo json_encode(['success' => true, 'mandi' => $mandi, 'unit' => 'INR per quintal',
+                          'crops' => $rows, 'served_stale' => $stale], JSON_UNESCAPED_UNICODE);
     }
 
     // --- MARKETPLACE LISTING ---

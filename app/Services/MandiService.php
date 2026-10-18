@@ -90,6 +90,16 @@ class MandiService {
     }
 
     /**
+     * Same crop at 2 to 5 mandis, ranked by the service (F5). Names are sorted
+     * so the same set of mandis always hits the same cache file.
+     */
+    public function getCompare($crop, array $mandis) {
+        $mandis = array_values($mandis);
+        sort($mandis, SORT_NATURAL | SORT_FLAG_CASE);
+        return $this->get('/compare', ['crop' => $crop, 'mandis' => implode(',', $mandis)]);
+    }
+
+    /**
      * GET with a small file cache (M4).
      *
      * - A fresh cached copy (younger than cache_ttl_seconds) is returned

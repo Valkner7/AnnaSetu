@@ -140,6 +140,113 @@ class MandiController {
         ]]);
     }
 
+    // --- COMPARE MANDIS (F5) ---
+
+    public function compare() {
+        $title = "Compare Mandis - SmartHarvest AI";
+        $crops = $this->allowedCrops(false);
+        $contentView = __DIR__ . '/../../views/mandi/compare.php';
+        require_once __DIR__ . '/../../views/layouts/main.php';
+    }
+
+    /**
+     * 2 to 5 distinct, plain mandi names from a comma-separated string, or
+     * null if the input is not usable. Names are only ever passed on to the
+     * price service, never used in a path or query on our side.
+     */
+    public static function parseMandiNames($raw) {
+        if (!is_string($raw) || $raw === '' || strlen($raw) > 600) {
+            return null;
+        }
+        $seen = [];
+        $out = [];
+        foreach (explode(',', $raw) as $name) {
+            $name = trim($name);
+            if ($name === '' || strlen($name) > 80 || preg_match('/[\x00-\x1F\x7F<>]/', $name)) {
+                return null;
+            }
+            $key = strtolower($name);
+            if (!isset($seen[$key])) {
+                $seen[$key] = true;
+                $out[] = $name;
+            }
+        }
+        return (count($out) >= 2 && count($out) <= 5) ? $out : null;
+    }
+
+    /** Ranked comparison of one crop across mandis, for the compare page. */
+    public function comparison() {
+        $crop = $_GET['crop'] ?? '';
+        $names = self::parseMandiNames($_GET['mandis'] ?? null);
+        if (!is_string($crop) || $crop === '' || $names === null) {
+            $this->json(['ok' => false, 'error' => 'Choose a crop and 2 to 5 mandis'], 400);
+            return;
+        }
+        session_write_close();
+        if (!in_array($crop, $this->allowedCrops(), true)) {
+            $this->json(['ok' => false, 'error' => 'Choose a crop and 2 to 5 mandis'], 400);
+            return;
+        }
+        $res = $this->service()->getCompare($crop, $names);
+        if (!$res['ok']) {
+            $msg = ($res['status'] === 404 || $res['status'] === 422)
+                ? 'No comparison is available for these mandis yet.'
+                : $res['error'];
+            $this->json(['ok' => false, 'error' => $msg, 'upstream_status' => $res['status']], 502);
+            return;
+        }
+        $d = $res['data'];
+        $lang = Translator::getCurrentLang();
+        $t = function ($k) { return Translator::get($k); };
+        $rows = [];
+        foreach (($d['results'] ?? []) as $r) {
+            if (!is_array($r) || !isset($r['mandi'], $r['latest_price']) || !is_string($r['mandi']) || !is_numeric($r['latest_price'])) {
+                continue;
+            }
+            $row = MandiText::localize([
+                'trend' => is_string($r['trend'] ?? null) ? $r['trend'] : '',
+                'latest_date' => is_string($r['latest_date'] ?? null) ? $r['latest_date'] : null,
+            ], $lang, $t);
+            $rows[] = [
+                'mandi' => $r['mandi'],
+                'latest_price' => (float) $r['latest_price'],
+                'latest_date' => $row['latest_date'],
+                'age_days' => MandiText::daysSince($row['latest_date']),
+                'trend_label' => $row['trend_label'],
+            ];
+        }
+        if (count($rows) === 0) {
+            $this->json(['ok' => false, 'error' => 'No comparison is available for these mandis yet.'], 502);
+            return;
+        }
+        // Our own ranking from the cleaned rows: highest price first.
+        usort($rows, function ($a, $b) { return $b['latest_price'] <=> $a['latest_price']; });
+        $best = $rows[0];
+        $worst = $rows[count($rows) - 1];
+        $skipped = [];
+        foreach (($d['skipped'] ?? []) as $s) {
+            if (is_array($s) && is_string($s['mandi'] ?? null)) {
+                $skipped[] = $s['mandi'];
+            }
+        }
+        $dates = array_filter(array_column($rows, 'latest_date'));
+        $spreadDays = 0;
+        if (count($dates) > 1) {
+            $spreadDays = (int) round((strtotime(max($dates) . ' UTC') - strtotime(min($dates) . ' UTC')) / 86400);
+        }
+        $this->json(['ok' => true, 'data' => [
+            'crop' => is_string($d['crop'] ?? null) ? $d['crop'] : $crop,
+            'unit' => 'INR per quintal',
+            'rows' => $rows,
+            'best_mandi' => $best['mandi'],
+            'spread' => round($best['latest_price'] - $worst['latest_price'], 2),
+            'spread_pct' => $worst['latest_price'] > 0 ? round(($best['latest_price'] - $worst['latest_price']) / $worst['latest_price'] * 100, 1) : 0,
+            'date_spread_days' => $spreadDays,
+            'skipped' => $skipped,
+            'served_stale' => !empty($res['stale']),
+        ]]);
+    }
+
     private function json($payload, $code = 200) {
         http_response_code($code);
         header('Content-Type: application/json');

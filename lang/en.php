@@ -118,5 +118,25 @@ return [
     'cp_stale' => 'Prices were last updated on {date} ({days} days ago).',
     'cp_served_stale' => 'The price service is not reachable; showing saved data.',
     'cp_disclaimer' => 'Past prices do not guarantee future prices. Check with your local mandi before deciding what to sow.',
-    'cp_view_prices' => 'See live prices and forecast'
+    'cp_view_prices' => 'See live prices and forecast',
+
+    // Compare mandis (F5)
+    'cf_title' => 'Compare Mandis',
+    'cf_desc' => 'Choose a crop and 2 to 5 mandis to see where the last reported price is highest.',
+    'cf_pick_mandis' => 'Mandis (choose 2 to 5)',
+    'cf_compare' => 'Compare',
+    'cf_need_two' => 'Choose at least 2 mandis.',
+    'cf_max_five' => 'You can compare at most 5 mandis.',
+    'cf_loading' => 'Comparing mandis... the price service can take up to a minute to wake up.',
+    'cf_err' => 'Could not compare these mandis. Please try again.',
+    'cf_col_rank' => '#',
+    'cf_col_price' => 'Last price (₹/qtl)',
+    'cf_col_diff' => 'Compared with highest',
+    'cf_col_trend' => 'Trend',
+    'cf_best_tag' => 'Highest',
+    'cf_best' => 'Highest last price: {mandi} (₹{price}/qtl).',
+    'cf_spread' => 'The gap between the highest and lowest is ₹{spread}/qtl ({pct}%).',
+    'cf_travel' => 'This does not include travel cost or time, which can be larger than a small gap. Check with the mandi before you travel.',
+    'cf_dates_differ' => 'These prices are from different dates (up to {days} days apart), so treat the gap as a rough guide, not a same-day comparison.',
+    'cf_skipped' => 'No price data for: {mandis}'
 ];

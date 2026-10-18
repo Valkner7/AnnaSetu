@@ -14,12 +14,17 @@ $tmp = sys_get_temp_dir() . '/mandi_cfg_' . bin2hex(random_bytes(4));
 mkdir($tmp);
 function localFile($tmp, $php) { $f = $tmp . '/mandi.local.php'; file_put_contents($f, $php); return $f; }
 $none = $tmp . '/does-not-exist.php';
-$D = MandiConfig::DEFAULT_API_BASE;
+$D = MandiConfig::DEFAULT_LOCAL_BASE;       // default main address: the bundled service
+$H = MandiConfig::DEFAULT_API_BASE;         // hosted copy: the default fallback
 
 // --- defaults ---
 $c = MandiConfig::load($none);
 check('defaults: same address and numbers as before', $c['api_base'] === $D && $c['timeout_seconds'] === 90 && $c['connect_timeout_seconds'] === 20 && $c['cache_ttl_seconds'] === 14400, json_encode($c));
-check('default address is the live host', $D === 'https://mandi-price-forecast-1.onrender.com');
+check('default main address is the bundled service on this computer', $D === 'http://127.0.0.1:8001');
+check('default fallback is the hosted service', $H === 'https://mandi-price-forecast-1.onrender.com' && $c['fallback_base'] === $H);
+check('fallback can be changed from the local file', MandiConfig::load(localFile($tmp, "<?php return ['fallback_base' => 'https://other.example.org'];"))['fallback_base'] === 'https://other.example.org');
+check('fallback can be switched off with an empty string', MandiConfig::load(localFile($tmp, "<?php return ['fallback_base' => ''];"))['fallback_base'] === '');
+check('unsafe fallback is ignored', MandiConfig::load(localFile($tmp, "<?php return ['fallback_base' => 'http://evil.example.com'];"))['fallback_base'] === $H);
 check('empty env value is ignored', MandiConfig::load($none, '')['api_base'] === $D && MandiConfig::load($none, '   ')['api_base'] === $D && MandiConfig::load($none, null)['api_base'] === $D);
 
 // --- env var ---

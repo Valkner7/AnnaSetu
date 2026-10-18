@@ -8,7 +8,12 @@ namespace App\Helpers;
  *   1. environment variable MANDI_API_BASE
  *   2. config/mandi.local.php (git-ignored, for XAMPP where setting
  *      environment variables is awkward)
- *   3. the default below
+ *   3. the default below: the bundled service on this computer
+ *      (tools/start-mandi-service.ps1 starts it on port 8001)
+ *
+ * If the main address cannot be reached at all, MandiService retries once
+ * on 'fallback_base' (the hosted copy), so the app keeps working when the
+ * local service is not running. Set 'fallback_base' to '' to turn that off.
  *
  * The optional shared secret (M10) follows the same order: environment variable
  * MANDI_API_SECRET, then 'api_secret' in config/mandi.local.php, else none.
@@ -19,10 +24,13 @@ namespace App\Helpers;
  */
 class MandiConfig {
 
+    // The bundled price service (ai/mandi_service) on this computer.
+    public const DEFAULT_LOCAL_BASE = 'http://127.0.0.1:8001';
+    // The hosted copy. Used as the fallback address.
     public const DEFAULT_API_BASE = 'https://mandi-price-forecast-1.onrender.com';
 
     // Only these keys may be overridden from the local file.
-    private const KEYS = ['api_base', 'timeout_seconds', 'connect_timeout_seconds', 'cache_ttl_seconds', 'api_secret'];
+    private const KEYS = ['api_base', 'fallback_base', 'timeout_seconds', 'connect_timeout_seconds', 'cache_ttl_seconds', 'api_secret'];
 
     /**
      * @param string      $localFile Path to the optional local override file.
@@ -31,9 +39,12 @@ class MandiConfig {
      */
     public static function load(string $localFile, ?string $envValue = null, ?string $secretEnv = null): array {
         $cfg = [
-            'api_base' => self::DEFAULT_API_BASE,
+            'api_base' => self::DEFAULT_LOCAL_BASE,
+            'fallback_base' => self::DEFAULT_API_BASE,
             'timeout_seconds' => 90,
             'connect_timeout_seconds' => 20,
+            // A service on this computer answers (or refuses) at once, so do not wait long for it.
+            'local_connect_timeout_seconds' => 2,
             // Cache upstream answers for 4 hours (prices change once a day). The last
             // good copy is still served, marked stale, if the service is down.
             'cache_ttl_seconds' => 14400,
@@ -48,7 +59,16 @@ class MandiConfig {
                     if (!array_key_exists($k, $local)) {
                         continue;
                     }
-                    if ($k === 'api_base') {
+                    if ($k === 'fallback_base' && $local[$k] === '') {
+                        $cfg[$k] = '';          // explicitly turned off
+                    } elseif ($k === 'fallback_base') {
+                        $clean = self::cleanBase($local[$k]);
+                        if ($clean === null) {
+                            error_log('MandiConfig: ignoring unusable fallback_base in ' . basename($localFile));
+                            continue;
+                        }
+                        $cfg[$k] = $clean;
+                    } elseif ($k === 'api_base') {
                         $clean = self::cleanBase($local[$k]);
                         if ($clean === null) {
                             error_log('MandiConfig: ignoring unusable api_base in ' . basename($localFile));

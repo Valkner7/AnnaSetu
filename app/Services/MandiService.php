@@ -3,6 +3,9 @@ namespace App\Services;
 
 class MandiService {
     private $base;
+    private $fallback;
+    private $localConnectTimeout;
+    private $lastBase;
     private $timeout;
     private $connectTimeout;
     private $cacheDir;
@@ -18,6 +21,9 @@ class MandiService {
             $cfg = array_merge($cfg, $override);
         }
         $this->base = rtrim($cfg['api_base'], '/');
+        $this->fallback = rtrim((string) ($cfg['fallback_base'] ?? ''), '/');
+        $this->localConnectTimeout = (int) ($cfg['local_connect_timeout_seconds'] ?? 2);
+        $this->lastBase = $this->base;
         $this->timeout = $cfg['timeout_seconds'] ?? 90;
         $this->connectTimeout = $cfg['connect_timeout_seconds'] ?? 20;
         $this->cacheTtl = (int) ($cfg['cache_ttl_seconds'] ?? 14400);
@@ -111,6 +117,24 @@ class MandiService {
     }
 
     /**
+     * Live health of the price service (not cached: a stale "ok" would be
+     * worse than none). Result keys as for fetchRemote(), plus 'via'.
+     */
+    public function getStatus() {
+        return $this->fetchRemote('/status');
+    }
+
+    /** 'local' or 'hosted': which address answered the most recent live call. */
+    public function lastSource(): string {
+        return self::isLoopback($this->lastBase) ? 'local' : 'hosted';
+    }
+
+    public static function isLoopback($base): bool {
+        $host = strtolower(trim((string) parse_url((string) $base, PHP_URL_HOST), '[]'));
+        return in_array($host, ['localhost', '127.0.0.1', '::1'], true);
+    }
+
+    /**
      * GET with a small file cache (M4).
      *
      * - A fresh cached copy (younger than cache_ttl_seconds) is returned
@@ -192,16 +216,38 @@ class MandiService {
         return $headers;
     }
 
+    /**
+     * One live call. Tries the main address; if nothing answered at all (status 0)
+     * or the service is down (5xx), tries the fallback address once, so the
+     * app still works when the bundled service is not running.
+     */
     protected function fetchRemote($path, $params = []) {
-        $url = $this->base . $path;
+        $res = $this->httpGet($this->base, $path, $params);
+        $this->lastBase = $this->base;
+        $down = ($res['status'] === 0 || $res['status'] >= 500);
+        if ($down && $this->fallback !== '' && strcasecmp($this->fallback, $this->base) !== 0) {
+            $res2 = $this->httpGet($this->fallback, $path, $params);
+            if ($res2['ok'] || $res2['status'] !== 0) {
+                $this->lastBase = $this->fallback;
+                $res = $res2;
+            }
+        }
+        $res['via'] = self::isLoopback($this->lastBase) ? 'local' : 'hosted';
+        return $res;
+    }
+
+    /** A GET to one specific base address. No fallback logic here. */
+    protected function httpGet($base, $path, $params = []) {
+        $url = $base . $path;
         if ($params) {
             $url .= '?' . http_build_query($params, '', '&', PHP_QUERY_RFC3986);
         }
+        $connect = self::isLoopback($base) ? min($this->connectTimeout, $this->localConnectTimeout) : $this->connectTimeout;
         $ch = curl_init($url);
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_TIMEOUT => $this->timeout,
-            CURLOPT_CONNECTTIMEOUT => $this->connectTimeout,
+            CURLOPT_CONNECTTIMEOUT => $connect,
             CURLOPT_HTTPHEADER => $this->requestHeaders($path),
         ]);
         $body = curl_exec($ch);

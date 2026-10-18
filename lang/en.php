@@ -138,5 +138,16 @@ return [
     'cf_spread' => 'The gap between the highest and lowest is ₹{spread}/qtl ({pct}%).',
     'cf_travel' => 'This does not include travel cost or time, which can be larger than a small gap. Check with the mandi before you travel.',
     'cf_dates_differ' => 'These prices are from different dates (up to {days} days apart), so treat the gap as a rough guide, not a same-day comparison.',
-    'cf_skipped' => 'No price data for: {mandis}'
+    'cf_skipped' => 'No price data for: {mandis}',
+
+    // Nearby mandis (F4)
+    'cn_use_location' => 'Use my location',
+    'cn_locating' => 'Finding your location...',
+    'cn_denied' => 'Could not get your location. Allow location access in the browser, or choose mandis yourself.',
+    'cn_unsupported' => 'Your browser cannot share your location. Choose mandis yourself.',
+    'cn_choose_crop' => 'Choose a crop first.',
+    'cn_none' => 'No nearby mandis with prices for this crop were found.',
+    'cn_done' => 'The nearest mandis with prices are selected. Distances are in a straight line, not by road.',
+    'cn_km' => '{km} km',
+    'cn_privacy' => 'Your location is used only to find nearby mandis. AnnaSetu does not store it.'
 ];

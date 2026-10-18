@@ -6,7 +6,9 @@ $cfText = [
     'best' => __('cf_best'), 'spread' => __('cf_spread'), 'datesDiffer' => __('cf_dates_differ'), 'skipped' => __('cf_skipped'),
     'stale' => __('cp_stale'), 'servedStale' => __('cp_served_stale'), 'bestTag' => __('cf_best_tag'), 'trendNa' => __('mp_trend_na'),
     'colRank' => __('cf_col_rank'), 'colMandi' => __('mp_mandi'), 'colPrice' => __('cf_col_price'),
-    'colDiff' => __('cf_col_diff'), 'colDate' => __('mp_col_date'), 'colTrend' => __('cf_col_trend'),
+    'colDiff' => __('cf_col_diff'), 'useLoc' => __('cn_use_location'), 'locating' => __('cn_locating'),
+    'locDenied' => __('cn_denied'), 'locUnsupported' => __('cn_unsupported'), 'locChooseCrop' => __('cn_choose_crop'),
+    'locNone' => __('cn_none'), 'locDone' => __('cn_done'), 'km' => __('cn_km'), 'colDate' => __('mp_col_date'), 'colTrend' => __('cf_col_trend'),
 ];
 ?>
 <div class="container py-5">
@@ -31,7 +33,11 @@ $cfText = [
                         </select>
                     </div>
                     <div class="col-md-8">
-                        <div class="form-label fw-bold"><?= e(__('cf_pick_mandis')) ?></div>
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <div class="form-label fw-bold m-0"><?= e(__('cf_pick_mandis')) ?></div>
+                            <button type="button" class="btn btn-outline-success btn-sm" id="cfLoc"><i class="fa-solid fa-location-crosshairs"></i> <?= e(__('cn_use_location')) ?></button>
+                        </div>
+                        <div class="text-muted small mb-2"><?= e(__('cn_privacy')) ?></div>
                         <div id="cfMandis" class="row row-cols-1 row-cols-sm-2 g-1"></div>
                     </div>
                 </div>
@@ -101,6 +107,38 @@ $cfText = [
                 el('cfMandis').appendChild(col);
             });
         });
+    });
+
+    // "Use my location" (F4): tick the nearest mandis that have a price for the chosen crop.
+    el('cfLoc').addEventListener('click', function () {
+        var crop = el('cfCrop').value;
+        if (!crop) { status(T.locChooseCrop, 'warning'); return; }
+        if (!navigator.geolocation) { status(T.locUnsupported, 'warning'); return; }
+        status(T.locating, 'info');
+        var mine = loadToken;
+        navigator.geolocation.getCurrentPosition(function (pos) {
+            var url = BASE + 'nearby&crop=' + encodeURIComponent(crop) +
+                '&lat=' + encodeURIComponent(pos.coords.latitude.toFixed(2)) +
+                '&lon=' + encodeURIComponent(pos.coords.longitude.toFixed(2));
+            getJson(url).then(function (j) {
+                if (mine !== loadToken || el('cfCrop').value !== crop) { return; }   // crop changed meanwhile
+                if (!j.ok) { status(j.error || T.err, 'danger'); return; }
+                var boxes = Array.prototype.slice.call(el('cfMandis').querySelectorAll('input'));
+                var byName = {};
+                boxes.forEach(function (b) { b.checked = false; b.parentNode.querySelector('label').textContent = b.value; byName[b.value.toLowerCase()] = b; });
+                var ticked = 0;
+                j.data.mandis.forEach(function (m) {
+                    var b = byName[m.mandi.toLowerCase()];
+                    if (!b) { return; }
+                    b.checked = true; ticked++;
+                    var label = b.parentNode.querySelector('label');
+                    label.textContent = m.mandi + ' (' + T.km.replace('{km}', m.distance_km) + ')';
+                });
+                syncButton();
+                if (ticked === 0) { status(T.locNone, 'warning'); return; }
+                status(T.locDone, 'success');
+            });
+        }, function () { status(T.locDenied, 'warning'); }, { timeout: 15000, maximumAge: 300000 });
     });
 
     function cell(tr, text, cls) { var td = document.createElement('td'); if (cls) { td.className = cls; } td.textContent = text; tr.appendChild(td); return td; }

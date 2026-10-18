@@ -100,6 +100,17 @@ class MandiService {
     }
 
     /**
+     * Mandis nearest to a point, with each one's latest price for $crop (F4).
+     * Not cached: every location is different, so caching would only fill
+     * the cache folder. The caller rounds the coordinates first.
+     */
+    public function getNearby($lat, $lon, $crop, $limit = 10) {
+        return $this->fetchRemote('/api/nearby-mandis', [
+            'lat' => $lat, 'lon' => $lon, 'crop' => $crop, 'limit' => max(1, min(50, (int) $limit)),
+        ]);
+    }
+
+    /**
      * GET with a small file cache (M4).
      *
      * - A fresh cached copy (younger than cache_ttl_seconds) is returned

@@ -174,6 +174,64 @@ class MandiController {
         return (count($out) >= 2 && count($out) <= 5) ? $out : null;
     }
 
+    /**
+     * A latitude/longitude pair inside the rough box around India, rounded to
+     * 2 decimals (about 1 km) so the app never sends or handles more precision
+     * than it needs. Null if either value is missing, not a number, or outside.
+     */
+    public static function parseLocation($lat, $lon) {
+        foreach ([$lat, $lon] as $v) {
+            if (!is_string($v) || !preg_match('/^-?\d{1,3}(\.\d{1,10})?$/', $v)) {
+                return null;
+            }
+        }
+        $lat = round((float) $lat, 2);
+        $lon = round((float) $lon, 2);
+        if ($lat < 6 || $lat > 38 || $lon < 68 || $lon > 98) {
+            return null;
+        }
+        return [$lat, $lon];
+    }
+
+    /** Nearest mandis that have a price for the crop, for "use my location" (F4). */
+    public function nearby() {
+        $crop = $_GET['crop'] ?? '';
+        $loc = self::parseLocation($_GET['lat'] ?? null, $_GET['lon'] ?? null);
+        if (!is_string($crop) || $crop === '' || $loc === null) {
+            $this->json(['ok' => false, 'error' => 'Choose a crop and share a location in India'], 400);
+            return;
+        }
+        session_write_close();
+        if (!in_array($crop, $this->allowedCrops(), true)) {
+            $this->json(['ok' => false, 'error' => 'Choose a crop and share a location in India'], 400);
+            return;
+        }
+        $res = $this->service()->getNearby($loc[0], $loc[1], $crop, 15);
+        if (!$res['ok']) {
+            $this->json(['ok' => false, 'error' => 'Nearby mandis are not available right now.',
+                         'upstream_status' => $res['status']], 502);
+            return;
+        }
+        $rows = [];
+        foreach (($res['data']['mandis'] ?? []) as $m) {
+            // Only mandis that actually have a price for this crop are useful for comparing.
+            if (!is_array($m) || !is_string($m['mandi'] ?? null) || !is_numeric($m['distance_km'] ?? null) || !is_numeric($m['latest_price'] ?? null)) {
+                continue;
+            }
+            $rows[] = [
+                'mandi' => $m['mandi'],
+                'district' => is_string($m['district'] ?? null) ? $m['district'] : '',
+                'distance_km' => round((float) $m['distance_km'], 1),
+                'latest_price' => (float) $m['latest_price'],
+            ];
+            if (count($rows) === 5) {
+                break;
+            }
+        }
+        usort($rows, function ($a, $b) { return $a['distance_km'] <=> $b['distance_km']; });
+        $this->json(['ok' => true, 'data' => ['crop' => $crop, 'mandis' => $rows]]);
+    }
+
     /** Ranked comparison of one crop across mandis, for the compare page. */
     public function comparison() {
         $crop = $_GET['crop'] ?? '';

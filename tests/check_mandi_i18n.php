@@ -16,7 +16,7 @@ function check($name, $ok) { global $fail; echo ($ok ? 'PASS ' : 'FAIL ') . $nam
 
 $lang = [];
 foreach (['en', 'hi', 'pa'] as $l) { $lang[$l] = require __DIR__ . "/../lang/$l.php"; }
-$mp = array_values(array_filter(array_keys($lang['en']), fn($k) => (strpos($k, 'mp_') === 0 || strpos($k, 'cp_') === 0 || strpos($k, 'cf_') === 0)));
+$mp = array_values(array_filter(array_keys($lang['en']), fn($k) => (strpos($k, 'mp_') === 0 || strpos($k, 'cp_') === 0 || strpos($k, 'cf_') === 0 || strpos($k, 'cn_') === 0)));
 check('English has mandi keys (' . count($mp) . ')', count($mp) >= 20);
 
 foreach (['hi', 'pa'] as $l) {

@@ -1,0 +1,50 @@
+name: CI
+
+# Lints every PHP file and runs the offline checks in tests/. No database or
+# network is needed. Runs on Linux, so it also catches folder-casing problems
+# that XAMPP on Windows hides (H3).
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v6
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+
+      - name: Lint all PHP files
+        run: |
+          status=0
+          for f in $(git ls-files '*.php'); do
+            php -l "$f" > /dev/null || status=1
+          done
+          exit $status
+
+      - name: Run PHP checks
+        run: |
+          status=0
+          for t in tests/check_*.php; do
+            echo "== $t"
+            php "$t" || status=1
+          done
+          exit $status
+
+      - name: Run JavaScript checks
+        run: |
+          status=0
+          for t in tests/check_*.js; do
+            echo "== $t"
+            node "$t" || status=1
+          done
+          exit $status

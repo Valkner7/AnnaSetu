@@ -1,0 +1,4 @@
+# Maps the placeholder author identities in old commits to the real one, so
+# `git log` and `git shortlog` show one name without rewriting history (L5).
+Aditya <aditya7505singh@gmail.com> Your Name <you@example.com>
+Aditya <aditya7505singh@gmail.com> Valkner7 <PASTE_YOUR_EMAIL_HERE>

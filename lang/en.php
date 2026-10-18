@@ -56,5 +56,30 @@ return [
     'soil_sandy' => 'Sandy',
     'irrigation_rainfed' => 'Rainfed',
     'irrigation_tubewell' => 'Tube Well',
-    'irrigation_canal' => 'Canal'
+    'irrigation_canal' => 'Canal',
+
+    // Market Prices page (M3).
+    'mp_title' => 'Market Prices',
+    'mp_subtitle' => 'Last reported mandi prices and a short projection for Punjab mandis.',
+    'mp_crop' => 'Crop',
+    'mp_mandi' => 'Mandi',
+    'mp_choose_crop' => '-- Choose crop --',
+    'mp_choose_crop_first' => '-- Choose crop first --',
+    'mp_choose_mandi' => '-- Choose mandi --',
+    'mp_show_prices' => 'Show prices',
+    'mp_last_price' => 'Last reported price',
+    'mp_projection' => 'Projection',
+    'mp_col_date' => 'Date',
+    'mp_col_projected' => 'Projected price (₹/qtl)',
+    'mp_per_quintal' => '/ quintal',
+    'mp_price_meta' => '{crop} at {mandi} - reported on {date}',
+    'mp_trend' => 'Trend: {trend}',
+    'mp_trend_na' => 'n/a',
+    'mp_stale_hidden' => 'Price data was last updated on {date}. Older projected dates are hidden.',
+    'mp_no_projection' => 'No current projection available. Showing the last reported price only.',
+    'mp_loading_mandis' => 'Loading mandis... the price service can take up to a minute to wake up the first time.',
+    'mp_loading_prices' => 'Loading prices...',
+    'mp_err_read' => 'Could not read the response. Please try again.',
+    'mp_err_mandis' => 'Could not load mandis.',
+    'mp_err_forecast' => 'No forecast available for this selection.'
 ];

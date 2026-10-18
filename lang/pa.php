@@ -56,5 +56,30 @@ return [
     'soil_sandy' => 'ਰੇਤਲੀ (Sandy)',
     'irrigation_rainfed' => 'ਮੀਂਹ ਆਧਾਰਿਤ (Rainfed)',
     'irrigation_tubewell' => 'ਟਿਊਬਵੈੱਲ (Tube Well)',
-    'irrigation_canal' => 'ਨਹਿਰ (Canal)'
+    'irrigation_canal' => 'ਨਹਿਰ (Canal)',
+
+    // Market Prices page (M3). Interface labels only; NEEDS NATIVE-SPEAKER REVIEW (R6).
+    'mp_title' => 'ਮੰਡੀ ਭਾਅ',
+    'mp_subtitle' => 'ਪੰਜਾਬ ਦੀਆਂ ਮੰਡੀਆਂ ਦੇ ਆਖ਼ਰੀ ਦਰਜ ਭਾਅ ਅਤੇ ਇੱਕ ਛੋਟਾ ਅਨੁਮਾਨ।',
+    'mp_crop' => 'ਫ਼ਸਲ',
+    'mp_mandi' => 'ਮੰਡੀ',
+    'mp_choose_crop' => '-- ਫ਼ਸਲ ਚੁਣੋ --',
+    'mp_choose_crop_first' => '-- ਪਹਿਲਾਂ ਫ਼ਸਲ ਚੁਣੋ --',
+    'mp_choose_mandi' => '-- ਮੰਡੀ ਚੁਣੋ --',
+    'mp_show_prices' => 'ਭਾਅ ਦਿਖਾਓ',
+    'mp_last_price' => 'ਆਖ਼ਰੀ ਦਰਜ ਭਾਅ',
+    'mp_projection' => 'ਅਨੁਮਾਨ',
+    'mp_col_date' => 'ਤਾਰੀਖ਼',
+    'mp_col_projected' => 'ਅਨੁਮਾਨਿਤ ਭਾਅ (₹/ਕੁਇੰਟਲ)',
+    'mp_per_quintal' => '/ ਕੁਇੰਟਲ',
+    'mp_price_meta' => '{crop}, {mandi} - {date} ਨੂੰ ਦਰਜ',
+    'mp_trend' => 'ਰੁਝਾਨ: {trend}',
+    'mp_trend_na' => 'ਉਪਲਬਧ ਨਹੀਂ',
+    'mp_stale_hidden' => 'ਭਾਅ ਦਾ ਡੇਟਾ ਆਖ਼ਰੀ ਵਾਰ {date} ਨੂੰ ਅੱਪਡੇਟ ਹੋਇਆ ਸੀ। ਪੁਰਾਣੀਆਂ ਤਾਰੀਖ਼ਾਂ ਦੇ ਅਨੁਮਾਨ ਲੁਕਾਏ ਗਏ ਹਨ।',
+    'mp_no_projection' => 'ਇਸ ਵੇਲੇ ਕੋਈ ਅਨੁਮਾਨ ਉਪਲਬਧ ਨਹੀਂ। ਸਿਰਫ਼ ਆਖ਼ਰੀ ਦਰਜ ਭਾਅ ਦਿਖਾਇਆ ਜਾ ਰਿਹਾ ਹੈ।',
+    'mp_loading_mandis' => 'ਮੰਡੀਆਂ ਲੋਡ ਹੋ ਰਹੀਆਂ ਹਨ... ਭਾਅ ਸੇਵਾ ਨੂੰ ਪਹਿਲੀ ਵਾਰ ਚਾਲੂ ਹੋਣ ਵਿੱਚ ਇੱਕ ਮਿੰਟ ਤੱਕ ਲੱਗ ਸਕਦਾ ਹੈ।',
+    'mp_loading_prices' => 'ਭਾਅ ਲੋਡ ਹੋ ਰਹੇ ਹਨ...',
+    'mp_err_read' => 'ਜਵਾਬ ਪੜ੍ਹਿਆ ਨਹੀਂ ਜਾ ਸਕਿਆ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।',
+    'mp_err_mandis' => 'ਮੰਡੀਆਂ ਲੋਡ ਨਹੀਂ ਹੋ ਸਕੀਆਂ।',
+    'mp_err_forecast' => 'ਇਸ ਚੋਣ ਲਈ ਕੋਈ ਅਨੁਮਾਨ ਉਪਲਬਧ ਨਹੀਂ।'
 ];

@@ -56,5 +56,30 @@ return [
     'soil_sandy' => 'बलुई (Sandy)',
     'irrigation_rainfed' => 'वर्षा आधारित (Rainfed)',
     'irrigation_tubewell' => 'ट्यूबवेल (Tube Well)',
-    'irrigation_canal' => 'नहर (Canal)'
+    'irrigation_canal' => 'नहर (Canal)',
+
+    // Market Prices page (M3). Interface labels only; NEEDS NATIVE-SPEAKER REVIEW (R6).
+    'mp_title' => 'मंडी भाव',
+    'mp_subtitle' => 'पंजाब की मंडियों के आखिरी दर्ज भाव और एक छोटा अनुमान।',
+    'mp_crop' => 'फसल',
+    'mp_mandi' => 'मंडी',
+    'mp_choose_crop' => '-- फसल चुनें --',
+    'mp_choose_crop_first' => '-- पहले फसल चुनें --',
+    'mp_choose_mandi' => '-- मंडी चुनें --',
+    'mp_show_prices' => 'भाव दिखाएं',
+    'mp_last_price' => 'आखिरी दर्ज भाव',
+    'mp_projection' => 'अनुमान',
+    'mp_col_date' => 'तारीख',
+    'mp_col_projected' => 'अनुमानित भाव (₹/क्विंटल)',
+    'mp_per_quintal' => '/ क्विंटल',
+    'mp_price_meta' => '{crop}, {mandi} - {date} को दर्ज',
+    'mp_trend' => 'रुझान: {trend}',
+    'mp_trend_na' => 'उपलब्ध नहीं',
+    'mp_stale_hidden' => 'भाव का डेटा आखिरी बार {date} को अपडेट हुआ था। पुरानी तारीखों के अनुमान छिपाए गए हैं।',
+    'mp_no_projection' => 'अभी कोई अनुमान उपलब्ध नहीं है। केवल आखिरी दर्ज भाव दिखाया जा रहा है।',
+    'mp_loading_mandis' => 'मंडियां लोड हो रही हैं... भाव सेवा को पहली बार शुरू होने में एक मिनट तक लग सकता है।',
+    'mp_loading_prices' => 'भाव लोड हो रहे हैं...',
+    'mp_err_read' => 'जवाब पढ़ा नहीं जा सका। कृपया दोबारा कोशिश करें।',
+    'mp_err_mandis' => 'मंडियां लोड नहीं हो सकीं।',
+    'mp_err_forecast' => 'इस चयन के लिए कोई अनुमान उपलब्ध नहीं है।'
 ];

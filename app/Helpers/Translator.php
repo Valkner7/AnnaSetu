@@ -7,19 +7,14 @@ class Translator {
 
     public static function load($lang = 'en') {
         self::$currentLang = $lang;
+        $base = __DIR__ . "/../../lang/en.php";
+        $english = file_exists($base) ? require $base : [];
         $file = __DIR__ . "/../../lang/{$lang}.php";
-        
-        if (file_exists($file)) {
-            self::$translations = require $file;
-        } else {
-            // Fallback to English
-            $fallback = __DIR__ . "/../../lang/en.php";
-            if (file_exists($fallback)) {
-                self::$translations = require $fallback;
-            } else {
-                self::$translations = [];
-            }
-        }
+
+        // English first, then the chosen language on top: a key that is not
+        // translated yet shows in English instead of as a raw key.
+        $chosen = ($lang !== 'en' && file_exists($file)) ? require $file : [];
+        self::$translations = array_merge($english, is_array($chosen) ? $chosen : []);
     }
 
     public static function get($key) {

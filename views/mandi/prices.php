@@ -1,31 +1,31 @@
 <div class="container py-5">
     <div class="mb-4">
         <h2 class="fw-bold" style="color: var(--primary-green);">
-            <i class="fa-solid fa-chart-line"></i> Market Prices (&#2350;&#2306;&#2337;&#2368; &#2349;&#2366;&#2357;)
+            <i class="fa-solid fa-chart-line"></i> <?= e(__('mp_title')) ?>
         </h2>
-        <p class="text-muted">Last reported mandi prices and a short projection for Punjab mandis.</p>
+        <p class="text-muted"><?= e(__('mp_subtitle')) ?></p>
     </div>
 
     <div class="card shadow-sm border-0 mb-4" style="border-top: 3px solid var(--primary-orange);">
         <div class="card-body p-4">
             <div class="row g-3">
                 <div class="col-md-4">
-                    <label class="form-label fw-bold" for="crop">Crop (&#2347;&#2360;&#2354;)</label>
+                    <label class="form-label fw-bold" for="crop"><?= e(__('mp_crop')) ?></label>
                     <select class="form-select" id="crop">
-                        <option value="">-- Choose crop --</option>
+                        <option value=""><?= e(__('mp_choose_crop')) ?></option>
                         <?php foreach ($crops as $c): ?>
                             <option value="<?= e($c) ?>"><?= e($c) ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
                 <div class="col-md-5">
-                    <label class="form-label fw-bold" for="mandi">Mandi (&#2350;&#2306;&#2337;&#2368;)</label>
+                    <label class="form-label fw-bold" for="mandi"><?= e(__('mp_mandi')) ?></label>
                     <select class="form-select" id="mandi" disabled>
-                        <option value="">-- Choose crop first --</option>
+                        <option value=""><?= e(__('mp_choose_crop_first')) ?></option>
                     </select>
                 </div>
                 <div class="col-md-3 d-flex align-items-end">
-                    <button type="button" class="btn btn-primary-custom w-100 fw-bold" id="go" disabled>Show prices</button>
+                    <button type="button" class="btn btn-primary-custom w-100 fw-bold" id="go" disabled><?= e(__('mp_show_prices')) ?></button>
                 </div>
             </div>
         </div>
@@ -39,7 +39,7 @@
             <div class="col-lg-5">
                 <div class="card shadow-sm border-0 h-100">
                     <div class="card-body p-4">
-                        <div class="text-muted small">Last reported price</div>
+                        <div class="text-muted small"><?= e(__('mp_last_price')) ?></div>
                         <div class="display-5 fw-bold" id="price" style="color: var(--primary-green);"></div>
                         <div class="text-muted" id="priceMeta"></div>
                         <div class="mt-3"><span class="badge bg-secondary" id="trend"></span></div>
@@ -49,10 +49,10 @@
             <div class="col-lg-7">
                 <div class="card shadow-sm border-0 h-100">
                     <div class="card-body p-4">
-                        <h5 class="fw-bold mb-1">Projection</h5>
+                        <h5 class="fw-bold mb-1"><?= e(__('mp_projection')) ?></h5>
                         <p class="text-muted small mb-3" id="projNote"></p>
                         <table class="table table-sm mb-0">
-                            <thead><tr><th>Date</th><th class="text-end">Projected price (&#8377;/qtl)</th></tr></thead>
+                            <thead><tr><th><?= e(__('mp_col_date')) ?></th><th class="text-end"><?= e(__('mp_col_projected')) ?></th></tr></thead>
                             <tbody id="rows"></tbody>
                         </table>
                     </div>
@@ -65,7 +65,26 @@
 <script>
 (function () {
     var BASE = <?= json_encode(BASE_URL . '/index.php?url=mandi/', JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+    var T = <?= json_encode([
+        'choose_crop_first' => __('mp_choose_crop_first'),
+        'choose_mandi'      => __('mp_choose_mandi'),
+        'per_quintal'       => __('mp_per_quintal'),
+        'price_meta'        => __('mp_price_meta'),
+        'trend'             => __('mp_trend'),
+        'trend_na'          => __('mp_trend_na'),
+        'stale_hidden'      => __('mp_stale_hidden'),
+        'no_projection'     => __('mp_no_projection'),
+        'loading_mandis'    => __('mp_loading_mandis'),
+        'loading_prices'    => __('mp_loading_prices'),
+        'err_read'          => __('mp_err_read'),
+        'err_mandis'        => __('mp_err_mandis'),
+        'err_forecast'      => __('mp_err_forecast'),
+    ], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) ?>;
     var token = 0;
+    // Fill {name} placeholders in a translated string.
+    function fmt(text, vars) {
+        return String(text).replace(/\{(\w+)\}/g, function (m, k) { return vars[k] === undefined ? m : vars[k]; });
+    }
     function el(id) { return document.getElementById(id); }
     function showStatus(msg, type) {
         var s = el('status');
@@ -76,7 +95,7 @@
     function getJson(url) {
         return fetch(url, { credentials: 'same-origin' })
             .then(function (r) { return r.json(); })
-            .catch(function () { return { ok: false, error: 'Could not read the response. Please try again.' }; });
+            .catch(function () { return { ok: false, error: T.err_read }; });
     }
     function money(n) {
         return '\u20B9' + Number(n).toLocaleString('en-IN', { maximumFractionDigits: 2 });
@@ -90,7 +109,7 @@
     function resetMandi() {
         var m = el('mandi');
         m.innerHTML = '';
-        m.appendChild(new Option('-- Choose crop first --', ''));
+        m.appendChild(new Option(T.choose_crop_first, ''));
         m.disabled = true;
         el('go').disabled = true;
         el('result').classList.add('d-none');
@@ -108,7 +127,7 @@
     function pickNotice(d, hiddenCount) {
         if (d.data_age_warning) { return d.data_age_warning; }
         if (d.data_note) { return d.data_note; }
-        if (hiddenCount > 0) { return 'Price data was last updated on ' + d.latest_date + '. Older projected dates are hidden.'; }
+        if (hiddenCount > 0) { return fmt(T.stale_hidden, { date: d.latest_date }); }
         return '';
     }
     function render(d) {
@@ -119,9 +138,9 @@
         w.innerHTML = '';
         var notice = pickNotice(d, hidden);
         if (notice) { addWarning(w, notice); }
-        el('price').textContent = money(d.latest_price) + ' / quintal';
-        el('priceMeta').textContent = d.crop + ' at ' + d.mandi + ' - reported on ' + d.latest_date;
-        el('trend').textContent = 'Trend: ' + (d.trend || 'n/a');
+        el('price').textContent = money(d.latest_price) + ' ' + T.per_quintal;
+        el('priceMeta').textContent = fmt(T.price_meta, { crop: d.crop, mandi: d.mandi, date: d.latest_date });
+        el('trend').textContent = fmt(T.trend, { trend: d.trend || T.trend_na });
         el('projNote').textContent = '';
         var tb = el('rows');
         tb.innerHTML = '';
@@ -130,7 +149,7 @@
             var ec = document.createElement('td');
             ec.colSpan = 2;
             ec.className = 'text-muted';
-            ec.textContent = 'No current projection available. Showing the last reported price only.';
+            ec.textContent = T.no_projection;
             er.appendChild(ec);
             tb.appendChild(er);
         }
@@ -153,14 +172,14 @@
         var mine = ++token;
         resetMandi();
         if (!crop) { hideStatus(); return; }
-        showStatus('Loading mandis... the price service can take up to a minute to wake up the first time.', 'info');
+        showStatus(T.loading_mandis, 'info');
         getJson(BASE + 'mandis&crop=' + encodeURIComponent(crop)).then(function (j) {
             if (mine !== token) { return; }
-            if (!j.ok) { showStatus(j.error || 'Could not load mandis.', 'danger'); return; }
+            if (!j.ok) { showStatus(j.error || T.err_mandis, 'danger'); return; }
             hideStatus();
             var m = el('mandi');
             m.innerHTML = '';
-            m.appendChild(new Option('-- Choose mandi --', ''));
+            m.appendChild(new Option(T.choose_mandi, ''));
             j.mandis.forEach(function (n) { m.appendChild(new Option(n, n)); });
             m.disabled = false;
         });
@@ -169,12 +188,12 @@
         el('go').disabled = !this.value;
     });
     el('go').addEventListener('click', function () {
-        showStatus('Loading prices...', 'info');
+        showStatus(T.loading_prices, 'info');
         el('result').classList.add('d-none');
         var url = BASE + 'forecast&crop=' + encodeURIComponent(el('crop').value) +
                   '&mandi=' + encodeURIComponent(el('mandi').value);
         getJson(url).then(function (j) {
-            if (!j.ok) { showStatus(j.error || 'No forecast available for this selection.', 'warning'); return; }
+            if (!j.ok) { showStatus(j.error || T.err_forecast, 'warning'); return; }
             hideStatus();
             render(j.data);
         });

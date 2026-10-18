@@ -3,10 +3,12 @@ namespace App\Controllers;
 
 use App\Services\MandiService;
 use App\Helpers\MandiText;
+use App\Helpers\MandiHealth;
 use App\Helpers\Translator;
 
 require_once __DIR__ . '/../Helpers/Translator.php';
 require_once __DIR__ . '/../Helpers/MandiText.php';
+require_once __DIR__ . '/../Helpers/MandiHealth.php';
 
 class MandiController {
 
@@ -303,6 +305,18 @@ class MandiController {
             'skipped' => $skipped,
             'served_stale' => !empty($res['stale']),
         ]]);
+    }
+
+    /**
+     * Health of the price service for the badge (live call, never cached).
+     * Returns only the small summary, not the service's full /status body.
+     */
+    public function health() {
+        session_write_close();
+        $svc = $this->service();
+        $res = $svc->getStatus();
+        $summary = MandiHealth::summarize($res['ok'] ? $res['data'] : null, $res['via'] ?? $svc->lastSource());
+        $this->json(['ok' => $res['ok'], 'data' => $summary]);
     }
 
     private function json($payload, $code = 200) {

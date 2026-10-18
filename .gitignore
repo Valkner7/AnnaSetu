@@ -1,6 +1,12 @@
 # Local config with credentials
 config/database.php
 config/mandi.local.php
+config/mandi-service.env
+
+# Python environment and caches of the bundled price service
+ai/mandi_service/.venv/
+ai/mandi_service/__pycache__/
+ai/mandi_service/routers/__pycache__/
 
 # User uploads and runtime files
 public/uploads/*

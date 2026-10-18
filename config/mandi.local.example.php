@@ -3,8 +3,12 @@
 // on this computer only. mandi.local.php is git-ignored, so it is never committed.
 // Delete any line you do not want to change.
 return [
-    // Address of the deployed price service (https, or http only for localhost).
-    'api_base' => 'https://mandi-price-forecast-1.onrender.com',
+    // Main address of the price service (https, or http only for localhost).
+    // Default: the bundled service on this computer (tools\start-mandi-service.ps1).
+    // 'api_base' => 'http://127.0.0.1:8001',
+    // Used only when the main address cannot be reached. Default: the hosted copy.
+    // Use '' to turn the fallback off.
+    // 'fallback_base' => 'https://mandi-price-forecast-1.onrender.com',
     // 'timeout_seconds' => 90,
     // 'connect_timeout_seconds' => 20,
     // 'cache_ttl_seconds' => 14400,

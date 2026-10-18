@@ -2,6 +2,11 @@
 namespace App\Controllers;
 
 use App\Services\MandiService;
+use App\Helpers\MandiText;
+use App\Helpers\Translator;
+
+require_once __DIR__ . '/../Helpers/Translator.php';
+require_once __DIR__ . '/../Helpers/MandiText.php';
 
 class MandiController {
 
@@ -76,7 +81,7 @@ class MandiController {
             return;
         }
         $d = $res['data'];
-        $this->json(['ok' => true, 'data' => [
+        $payload = [
             'crop' => $d['crop'] ?? $crop,
             'mandi' => $d['mandi'] ?? $mandi,
             'latest_date' => $d['latest_date'] ?? null,
@@ -91,7 +96,12 @@ class MandiController {
             'data_age_days' => $d['data_age_days'] ?? null,
             'model_note' => $d['model_note'] ?? null,
             'served_stale' => !empty($res['stale']),
-        ]]);
+            'dataset_latest_date' => $d['dataset_latest_date'] ?? null,
+        ];
+        // Trend, confidence note and data-age notices in the user's language (en, hi, pa).
+        $lang = Translator::getCurrentLang();
+        $payload = MandiText::localize($payload, $lang, function ($k) { return Translator::get($k); });
+        $this->json(['ok' => true, 'data' => $payload]);
     }
 
     /** Past daily prices for the chart (F1). Same crop whitelist and error handling as forecast(). */

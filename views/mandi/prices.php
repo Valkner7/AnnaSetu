@@ -14,7 +14,7 @@
                     <select class="form-select" id="crop">
                         <option value=""><?= e(__('mp_choose_crop')) ?></option>
                         <?php foreach ($crops as $c): ?>
-                            <option value="<?= e($c) ?>"><?= e($c) ?></option>
+                            <option value="<?= e($c) ?>"><?= e(\App\Helpers\MandiText::cropLabel($c, function ($k) { return __($k); })) ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -95,6 +95,7 @@
         'chart_note'        => __('mp_chart_note'),
         'unit_label'        => __('mp_per_quintal'),
     ], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) ?>;
+    var CROP_LABELS = <?= json_encode(array_combine($crops, array_map(function ($c) { return \App\Helpers\MandiText::cropLabel($c, function ($k) { return __($k); }); }, $crops)) ?: new stdClass(), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) ?>;
     var token = 0;
     var clickToken = 0;
     var chart = null;
@@ -156,8 +157,8 @@
         var notice = pickNotice(d, hidden);
         if (notice) { addWarning(w, notice); }
         el('price').textContent = money(d.latest_price) + ' ' + T.per_quintal;
-        el('priceMeta').textContent = fmt(T.price_meta, { crop: d.crop, mandi: d.mandi, date: d.latest_date });
-        el('trend').textContent = fmt(T.trend, { trend: d.trend || T.trend_na });
+        el('priceMeta').textContent = fmt(T.price_meta, { crop: CROP_LABELS[d.crop] || d.crop, mandi: d.mandi, date: d.latest_date });
+        el('trend').textContent = fmt(T.trend, { trend: d.trend_label || d.trend || T.trend_na });
         el('projNote').textContent = '';
         var tb = el('rows');
         tb.innerHTML = '';

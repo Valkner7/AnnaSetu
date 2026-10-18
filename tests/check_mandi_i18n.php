@@ -4,6 +4,7 @@
 
 define('BASE_URL', '/app');
 require __DIR__ . '/../app/Helpers/Translator.php';
+require __DIR__ . '/../app/Helpers/MandiText.php';
 use App\Helpers\Translator;
 
 // Same helpers the app defines in public/index.php.
@@ -54,11 +55,15 @@ foreach (['en', 'hi', 'pa'] as $l) {
     check("$l view renders", strlen($html) > 1500);
     check("$l view shows no raw mp_ key", !preg_match('/mp_[a-z_]+/', preg_replace('/<script.*?<\/script>/s', '', $html)));
     check("$l view has the translated title", strpos($html, e($lang[$l]['mp_title'])) !== false);
-    check("$l view lists the crops", strpos($html, '>Potato<') !== false);
+    // English shows the plain name; Hindi/Punjabi show the local name with the English one in brackets.
+    $expectCrop = \App\Helpers\MandiText::cropLabel('Potato', function ($k) { return Translator::get($k); });
+    check("$l view lists the crops", strpos($html, '>' . e($expectCrop) . '<') !== false);
+    check("$l crop label is " . ($l === 'en' ? 'plain' : 'translated'), $l === 'en' ? $expectCrop === 'Potato' : $expectCrop !== 'Potato' && strpos($expectCrop, '(Potato)') !== false);
     // The strings handed to JS must round-trip as valid JSON.
     preg_match('/var T = (\{.*?\});\n/s', $html, $m);
     $t = json_decode($m[1] ?? '', true);
     check("$l JS strings are valid JSON", is_array($t) && count($t) === 17);
+    check("$l view has no raw mp_crop key", !preg_match("/mp_crop_/", $html));
     foreach (["chart_history", "chart_forecast", "chart_note", "unit_label"] as $k) { check("$l JS has $k", !empty($t[$k])); }
     check("$l view has the chart canvas", strpos($html, "id=\"priceChart\"") !== false && strpos($html, "assets/js/mandi-chart.js") !== false);
 }

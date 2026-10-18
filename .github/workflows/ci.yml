@@ -48,3 +48,32 @@ jobs:
             node "$t" || status=1
           done
           exit $status
+
+  mandi-service:
+    # The embedded price service (ai/mandi_service). Same Python and install steps
+    # as its own test workflow in the source repo. test_scenarios.py is left out here:
+    # it needs a Gemini key for its last stage and is report-only without one.
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: ai/mandi_service
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run service tests
+        run: |
+          status=0
+          for t in test_explanations test_observability test_data_age test_spa_routes test_api_secret test_question_limit; do
+            echo "== $t"
+            python $t.py || status=1
+          done
+          exit $status

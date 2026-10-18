@@ -1,0 +1,18 @@
+__pycache__/
+*.pyc
+venv/
+.venv/
+*.mp3
+test_output.txt
+subscriptions.json
+
+# Local raw scratch data
+*_raw.csv
+frontend-old-monolithic/
+.env
+node_modules/
+frontend/dist/
+*.log
+.vscode/
+.idea/
+dashboard.diff.txt

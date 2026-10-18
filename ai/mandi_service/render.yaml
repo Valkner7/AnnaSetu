@@ -1,0 +1,69 @@
+# Render Blueprint — documents the deploy config that currently only lives in
+# the Render dashboard. Not required for the existing service to keep running,
+# but if it's ever deleted or needs recreating under time pressure (e.g. right
+# before a demo), this is a working starting point:
+#   https://dashboard.render.com/blueprints -> New Blueprint Instance -> point
+#   at this repo. Render will read this file and propose the service below.
+#
+# After creating from this blueprint, set the `sync: false` env vars in the
+# Render dashboard (Environment tab) — they're intentionally NOT committed
+# here. See README.md "2. Set environment variables" for what each one does.
+services:
+  - type: web
+    name: mandi-price-forecast
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.14.3
+      # Text/voice advisory generation (README section 2)
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-3.7-flash
+      # Outbound WhatsApp price alerts (README "Price alerts")
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_WHATSAPP_FROM
+        sync: false
+      # Persistent storage for WhatsApp alert subscriptions (Turso). Without
+      # these the app still serves, but subscriptions are not persisted.
+      - key: TURSO_DATABASE_URL
+        sync: false
+      - key: TURSO_AUTH_TOKEN
+        sync: false
+      # Optional tuning. Values shown are the code defaults (usage_guard.py,
+      # routers/predict.py, observability.py, app.py) -- change only if needed.
+      - key: GEMINI_DAILY_CALL_LIMIT
+        value: "300"
+      - key: GTTS_DAILY_CALL_LIMIT
+        value: "1000"
+      - key: ADVISORY_TIMEOUT_SECONDS
+        value: "8"
+      - key: VOICE_ADVISORY_BUDGET_SECONDS
+        value: "10"
+      - key: ALERT_CHECK_INTERVAL_SECONDS
+        value: "600"
+      - key: LOG_LEVEL
+        value: info
+      # GOOGLE_API_KEY is also accepted as a fallback for GEMINI_API_KEY (the
+      # code reads GEMINI_API_KEY first). Not listed here so a blueprint
+      # doesn't prompt for two keys; add it in the dashboard if you use it.
+      # Protects /check-alerts from being triggered by anyone who finds the URL
+      - key: ALERTS_CRON_SECRET
+        sync: false
+      # Protects /advisory, /compare-advisory and /voice-advisory (X-Api-Secret header).
+      # Unset = open, as before.
+      - key: API_SHARED_SECRET
+        sync: false
+      # Leave unset/false on Render — alert checking is driven by the
+      # .github/workflows/check-alerts.yml cron instead, since a free-tier
+      # dyno's background thread sleeps with the rest of the process
+      # (see README "Deployment reality"). Only for local rehearsal.
+      - key: ENABLE_INTERNAL_ALERT_SCHEDULER
+        value: "false"

@@ -86,5 +86,14 @@ return [
     'mp_chart_history' => 'Reported price',
     'mp_chart_forecast' => 'Projection',
     'mp_chart_note' => 'Past reported prices (last {n} reported days) and the projection.',
-    'mp_err_history' => 'Price history is not available for this selection.'
+    'mp_err_history' => 'Price history is not available for this selection.',
+    'mp_trend_rising' => 'rising',
+    'mp_trend_falling' => 'falling',
+    'mp_trend_stable' => 'stable',
+    'mp_confidence_note' => 'This is a directional estimate, not a precise prediction — on this kind of data, forecasts improve on simply expecting no price change only some of the time.',
+    'mp_data_age_warning' => 'Price data has not updated since {date} ({days} days ago). Forecasts are projected from that date, so the first forecast days may already have passed.',
+    'mp_data_note' => 'Most recent available record is from {date} ({days} days ago). Forecast is projected forward from that date, not from today.',
+    'mp_crop_potato' => 'Potato',
+    'mp_crop_onion' => 'Onion',
+    'mp_crop_tomato' => 'Tomato'
 ];

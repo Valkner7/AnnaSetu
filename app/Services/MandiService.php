@@ -83,6 +83,12 @@ class MandiService {
         return $this->get('/predict', ['crop' => $crop, 'mandi' => $mandi]);
     }
 
+    /** Recent daily prices for one crop and mandi, for the price chart (F1). 7 to 365 days. */
+    public function getHistory($crop, $mandi, $days = 60) {
+        $days = max(7, min(365, (int) $days));
+        return $this->get('/history', ['crop' => $crop, 'mandi' => $mandi, 'days' => $days]);
+    }
+
     /**
      * GET with a small file cache (M4).
      *

@@ -58,7 +58,9 @@ foreach (['en', 'hi', 'pa'] as $l) {
     // The strings handed to JS must round-trip as valid JSON.
     preg_match('/var T = (\{.*?\});\n/s', $html, $m);
     $t = json_decode($m[1] ?? '', true);
-    check("$l JS strings are valid JSON", is_array($t) && count($t) === 13);
+    check("$l JS strings are valid JSON", is_array($t) && count($t) === 17);
+    foreach (["chart_history", "chart_forecast", "chart_note", "unit_label"] as $k) { check("$l JS has $k", !empty($t[$k])); }
+    check("$l view has the chart canvas", strpos($html, "id=\"priceChart\"") !== false && strpos($html, "assets/js/mandi-chart.js") !== false);
 }
 
 // No hard-coded English left in the visible markup or JS messages.

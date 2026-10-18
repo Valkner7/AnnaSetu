@@ -59,9 +59,20 @@
                 </div>
             </div>
         </div>
+        <div class="card shadow-sm border-0 mt-4 d-none" id="chartCard">
+            <div class="card-body p-4">
+                <h5 class="fw-bold mb-1"><?= e(__('mp_chart_title')) ?></h5>
+                <p class="text-muted small mb-3" id="chartNote"></p>
+                <div style="position: relative; height: 300px;">
+                    <canvas id="priceChart" role="img" aria-label="<?= e(__('mp_chart_title')) ?>"></canvas>
+                </div>
+            </div>
+        </div>
         <p class="text-muted small mt-3 mb-0" id="confidence"></p>
     </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="<?= e(BASE_URL) ?>/assets/js/mandi-chart.js?v=1"></script>
 <script>
 (function () {
     var BASE = <?= json_encode(BASE_URL . '/index.php?url=mandi/', JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
@@ -79,8 +90,14 @@
         'err_read'          => __('mp_err_read'),
         'err_mandis'        => __('mp_err_mandis'),
         'err_forecast'      => __('mp_err_forecast'),
+        'chart_history'     => __('mp_chart_history'),
+        'chart_forecast'    => __('mp_chart_forecast'),
+        'chart_note'        => __('mp_chart_note'),
+        'unit_label'        => __('mp_per_quintal'),
     ], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) ?>;
     var token = 0;
+    var clickToken = 0;
+    var chart = null;
     // Fill {name} placeholders in a translated string.
     function fmt(text, vars) {
         return String(text).replace(/\{(\w+)\}/g, function (m, k) { return vars[k] === undefined ? m : vars[k]; });
@@ -167,6 +184,20 @@
         el('confidence').textContent = d.confidence_note || '';
         el('result').classList.remove('d-none');
     }
+    // Price chart (F1). Never blocks or breaks the price table: any failure just hides the chart.
+    function hideChart() {
+        el('chartCard').classList.add('d-none');
+        if (chart) { chart.destroy(); chart = null; }
+    }
+    function showChart(history, future) {
+        if (!window.Chart || !window.MandiChart || !history || history.length === 0) { hideChart(); return; }
+        var series = MandiChart.buildSeries(history, future);
+        if (series.pastCount === 0) { hideChart(); return; }
+        el('chartNote').textContent = fmt(T.chart_note, { n: series.pastCount });
+        el('chartCard').classList.remove('d-none');
+        chart = MandiChart.draw(Chart, el('priceChart'), series,
+            { history: T.chart_history, forecast: T.chart_forecast, unit: '\u20B9 ' + T.unit_label }, chart);
+    }
     el('crop').addEventListener('change', function () {
         var crop = this.value;
         var mine = ++token;
@@ -188,14 +219,23 @@
         el('go').disabled = !this.value;
     });
     el('go').addEventListener('click', function () {
+        var mineClick = ++clickToken;
         showStatus(T.loading_prices, 'info');
         el('result').classList.add('d-none');
-        var url = BASE + 'forecast&crop=' + encodeURIComponent(el('crop').value) +
-                  '&mandi=' + encodeURIComponent(el('mandi').value);
-        getJson(url).then(function (j) {
+        hideChart();
+        var q = '&crop=' + encodeURIComponent(el('crop').value) +
+                '&mandi=' + encodeURIComponent(el('mandi').value);
+        var historyReq = getJson(BASE + 'history' + q + '&days=60');
+        getJson(BASE + 'forecast' + q).then(function (j) {
+            if (mineClick !== clickToken) { return; }
             if (!j.ok) { showStatus(j.error || T.err_forecast, 'warning'); return; }
             hideStatus();
             render(j.data);
+            var future = futureRows(j.data.forecast, todayIso());
+            historyReq.then(function (h) {
+                if (mineClick !== clickToken) { return; }
+                if (h && h.ok && h.data) { showChart(h.data.points, future); } else { hideChart(); }
+            });
         });
     });
 })();

@@ -81,5 +81,10 @@ return [
     'mp_loading_prices' => 'Loading prices...',
     'mp_err_read' => 'Could not read the response. Please try again.',
     'mp_err_mandis' => 'Could not load mandis.',
-    'mp_err_forecast' => 'No forecast available for this selection.'
+    'mp_err_forecast' => 'No forecast available for this selection.',
+    'mp_chart_title' => 'Price history',
+    'mp_chart_history' => 'Reported price',
+    'mp_chart_forecast' => 'Projection',
+    'mp_chart_note' => 'Past reported prices (last {n} reported days) and the projection.',
+    'mp_err_history' => 'Price history is not available for this selection.'
 ];

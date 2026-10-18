@@ -11,13 +11,13 @@ A multilingual (English, Hindi, Punjabi) PHP web app that connects farmers, buye
 - **Accounts and roles:** farmer, buyer, equipment owner, storage provider and transporter sign-up; admin can only be set directly in the database.
 - **Farmer tools:** land and crop records, crop planning page, produce listings (with a mandi price hint on the sell form).
 - **Marketplaces:** produce marketplace with cart and orders for buyers; equipment fleet and booking for owners and farmers.
-- **Market Prices page:** crop and mandi picker, latest price, 7-day forecast and a data-age notice, served by the price service below.
+- **Market Prices page:** crop and mandi picker, latest price, 7-day forecast, a price-history chart (last 60 reported days plus the projection, drawn with Chart.js) and a data-age notice, served by the price service below.
 - **Languages:** `lang/en.php`, `lang/hi.php`, `lang/pa.php`. Hindi and Punjabi text from the price service is still waiting for native-speaker review.
 - **Security basics:** session CSRF token on every POST, escaped view output, validated and re-encoded image uploads, login throttling, hardened session cookies and security headers.
 
 ## Roadmap (not built yet)
 
-Chart on the price page, real crop-planning recommendations from price history, nearby and compare mandis, voice/text advisory, price alerts, storage marketplace, logistics, IoT monitoring and AI crop grading.
+Real crop-planning recommendations from price history, nearby and compare mandis, voice/text advisory, price alerts, storage marketplace, logistics, IoT monitoring and AI crop grading.
 
 ## Technology
 

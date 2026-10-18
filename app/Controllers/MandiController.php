@@ -94,6 +94,42 @@ class MandiController {
         ]]);
     }
 
+    /** Past daily prices for the chart (F1). Same crop whitelist and error handling as forecast(). */
+    public function history() {
+        $crop = $_GET['crop'] ?? '';
+        $mandi = is_string($_GET['mandi'] ?? null) ? trim($_GET['mandi']) : '';
+        $days = (isset($_GET['days']) && is_scalar($_GET['days'])) ? (int) $_GET['days'] : 60;
+        $days = max(7, min(365, $days));
+        if (!is_string($crop) || $crop === '' || $mandi === '') {
+            $this->json(['ok' => false, 'error' => 'Choose a crop and a mandi'], 400);
+            return;
+        }
+        session_write_close();
+        if (!in_array($crop, $this->allowedCrops(), true)) {
+            $this->json(['ok' => false, 'error' => 'Choose a crop and a mandi'], 400);
+            return;
+        }
+        $res = $this->service()->getHistory($crop, $mandi, $days);
+        if (!$res['ok']) {
+            $this->json(['ok' => false, 'error' => 'Price history is not available for this selection.',
+                         'upstream_status' => $res['status']], 502);
+            return;
+        }
+        $points = [];
+        foreach (($res['data']['points'] ?? []) as $pt) {
+            if (is_array($pt) && isset($pt['date'], $pt['price']) && is_string($pt['date']) && is_numeric($pt['price'])) {
+                $points[] = ['date' => $pt['date'], 'price' => (float) $pt['price']];
+            }
+        }
+        $this->json(['ok' => true, 'data' => [
+            'crop' => $res['data']['crop'] ?? $crop,
+            'mandi' => $res['data']['mandi'] ?? $mandi,
+            'unit' => $res['data']['unit'] ?? 'INR per quintal',
+            'points' => $points,
+            'served_stale' => !empty($res['stale']),
+        ]]);
+    }
+
     private function json($payload, $code = 200) {
         http_response_code($code);
         header('Content-Type: application/json');

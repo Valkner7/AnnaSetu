@@ -57,7 +57,7 @@ class MandiController {
         $res = $this->service()->getMeta($crop);
         $this->json([
             'ok' => $res['ok'],
-            'error' => $res['error'],
+            'error' => $res['ok'] ? null : $this->serviceDownMessage($res),
             'mandis' => $res['data']['mandis'] ?? [],
         ], $res['ok'] ? 200 : 502);
     }
@@ -78,7 +78,7 @@ class MandiController {
         if (!$res['ok']) {
             $msg = ($res['status'] === 404 || $res['status'] === 422)
                 ? 'No forecast is available for this crop and mandi yet.'
-                : $res['error'];
+                : $this->serviceDownMessage($res);
             $this->json(['ok' => false, 'error' => $msg, 'upstream_status' => $res['status']], 502);
             return;
         }
@@ -259,7 +259,7 @@ class MandiController {
         if (!$res['ok']) {
             $msg = ($res['status'] === 404 || $res['status'] === 422)
                 ? 'No comparison is available for these mandis yet.'
-                : $res['error'];
+                : $this->serviceDownMessage($res);
             $this->json(['ok' => false, 'error' => $msg, 'upstream_status' => $res['status']], 502);
             return;
         }
@@ -331,5 +331,15 @@ class MandiController {
         http_response_code($code);
         header('Content-Type: application/json');
         echo json_encode($payload, JSON_UNESCAPED_UNICODE);
+    }
+
+    /**
+     * Text shown to the visitor when the price service could not answer. The
+     * technical detail (address, port, cURL hint) goes to the server log only,
+     * so visitors never see it and the message is in their language.
+     */
+    private function serviceDownMessage(array $res): string {
+        error_log('Price service error: ' . (string) ($res['error'] ?? 'unknown'));
+        return Translator::get('al_err_service');
     }
 }

@@ -97,4 +97,7 @@ if ($Hidden) {
 }
 Write-Host "Starting the price service on http://127.0.0.1:$Port  (press Ctrl+C to stop)"
 Set-Location $svc
+# uvicorn writes its normal log lines to stderr. Windows PowerShell 5.1 would treat the first one
+# as an error (and stop the service) when output is captured, as the scheduled task does.
+$ErrorActionPreference = "Continue"
 & $py @uvArgs

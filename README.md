@@ -45,10 +45,9 @@ Storage marketplace, logistics, IoT monitoring and AI crop grading.
 ## Setup
 
 1. Copy `config/database.example.php` to `config/database.php` and fill in your MySQL details.
-2. Create the database and run `setup_db.php`, then the schema files in `database/` in order if you need them separately.
-3. Create the price alerts table: `php run_schema7.php` (or import `database/schema_phase7.sql`).
-4. Optional: copy `config/mandi.local.example.php` to `config/mandi.local.php` to change the price service address or send a shared secret.
-5. Serve `public/` with Apache (e.g. XAMPP) and open it in a browser.
+2. Run `php setup_db.php` from the project folder. It creates the `smartharvest_db` database and applies every schema file in `database/` (phases 1 to 7) in order, including the farmer, buyer, equipment, storage and price-alert tables. It is safe to re-run after pulling new code. `run_schema4.php`, `run_schema5.php` and `run_schema7.php` still work but are no longer needed.
+3. Optional: copy `config/mandi.local.example.php` to `config/mandi.local.php` to change the price service address or send a shared secret.
+4. Serve `public/` with Apache (e.g. XAMPP) and open it in a browser.
 
 ### Run the price service locally
 

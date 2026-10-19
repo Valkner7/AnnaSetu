@@ -116,6 +116,37 @@ class MandiService {
         ]);
     }
 
+    // --- Advisory (F6). Never cached: every question is different, and each call may cost quota. ---
+
+    public function getAdvisory($crop, $mandi, $question, $language) {
+        return $this->fetchRemote('/advisory', ['crop' => $crop, 'mandi' => $mandi, 'question' => $question, 'language' => $language]);
+    }
+
+    public function getCompareAdvisory($crop, array $mandis, $question, $language) {
+        return $this->fetchRemote('/compare-advisory', ['crop' => $crop, 'mandis' => implode(',', array_values($mandis)), 'question' => $question, 'language' => $language]);
+    }
+
+    /**
+     * Spoken advisory (MP3). The service finds the crop and mandi in the
+     * question text itself. Result keys: ok, status, error, body, content_type, via.
+     */
+    public function getVoiceAdvisory($question, $language) {
+        $params = ['question' => $question, 'language' => $language];
+        $path = '/voice-advisory';
+        $res = $this->httpPostBinary($this->base, $path, $params);
+        $this->lastBase = $this->base;
+        $down = ($res['status'] === 0 || $res['status'] >= 500);
+        if ($down && $this->fallback !== '' && strcasecmp($this->fallback, $this->base) !== 0) {
+            $res2 = $this->httpPostBinary($this->fallback, $path, $params);
+            if ($res2['ok'] || $res2['status'] !== 0) {
+                $this->lastBase = $this->fallback;
+                $res = $res2;
+            }
+        }
+        $res['via'] = self::isLoopback($this->lastBase) ? 'local' : 'hosted';
+        return $res;
+    }
+
     /**
      * Live health of the price service (not cached: a stale "ok" would be
      * worse than none). Result keys as for fetchRemote(), plus 'via'.
@@ -234,6 +265,37 @@ class MandiService {
         }
         $res['via'] = self::isLoopback($this->lastBase) ? 'local' : 'hosted';
         return $res;
+    }
+
+    /** A POST (parameters in the query string, as the service expects) that returns raw bytes. */
+    protected function httpPostBinary($base, $path, $params = []) {
+        $url = $base . $path . ($params ? '?' . http_build_query($params, '', '&', PHP_QUERY_RFC3986) : '');
+        $connect = self::isLoopback($base) ? min($this->connectTimeout, $this->localConnectTimeout) : $this->connectTimeout;
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => '',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => $this->timeout,
+            CURLOPT_CONNECTTIMEOUT => $connect,
+            CURLOPT_HTTPHEADER => $this->requestHeaders($path),
+        ]);
+        $body = curl_exec($ch);
+        $errno = curl_errno($ch);
+        $err = curl_error($ch);
+        $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $type = (string) curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+        curl_close($ch);
+
+        if ($errno !== 0) {
+            return ['ok' => false, 'status' => 0, 'error' => 'Could not reach the price service (' . $err . ')', 'body' => null, 'content_type' => ''];
+        }
+        if ($status >= 200 && $status < 300 && is_string($body) && $body !== '') {
+            return ['ok' => true, 'status' => $status, 'error' => null, 'body' => $body, 'content_type' => $type];
+        }
+        $data = json_decode((string) $body, true);
+        $detail = (is_array($data) && is_string($data['detail'] ?? null)) ? $data['detail'] : 'Unexpected response from the price service';
+        return ['ok' => false, 'status' => $status, 'error' => $detail, 'body' => null, 'content_type' => ''];
     }
 
     /** A GET to one specific base address. No fallback logic here. */

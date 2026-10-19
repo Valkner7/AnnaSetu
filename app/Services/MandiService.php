@@ -267,8 +267,23 @@ class MandiService {
         return $res;
     }
 
+    /**
+     * True when PHP's cURL extension is loaded. Without it curl_init() is a fatal error,
+     * so the two HTTP methods check this first and report "cannot reach" instead.
+     * Protected so tests can switch it off.
+     */
+    protected function curlAvailable(): bool {
+        return function_exists('curl_init');
+    }
+
+    /** The message used when the cURL extension is missing (shown to the user as the error). */
+    private const NO_CURL = 'Could not reach the price service (the PHP cURL extension is not enabled; in XAMPP remove the semicolon before extension=curl in php.ini and restart Apache)';
+
     /** A POST (parameters in the query string, as the service expects) that returns raw bytes. */
     protected function httpPostBinary($base, $path, $params = []) {
+        if (!$this->curlAvailable()) {
+            return ['ok' => false, 'status' => 0, 'error' => self::NO_CURL, 'body' => null, 'content_type' => ''];
+        }
         $url = $base . $path . ($params ? '?' . http_build_query($params, '', '&', PHP_QUERY_RFC3986) : '');
         $connect = self::isLoopback($base) ? min($this->connectTimeout, $this->localConnectTimeout) : $this->connectTimeout;
         $ch = curl_init($url);
@@ -300,6 +315,9 @@ class MandiService {
 
     /** A GET to one specific base address. No fallback logic here. */
     protected function httpGet($base, $path, $params = []) {
+        if (!$this->curlAvailable()) {
+            return ['ok' => false, 'status' => 0, 'error' => self::NO_CURL, 'data' => null];
+        }
         $url = $base . $path;
         if ($params) {
             $url .= '?' . http_build_query($params, '', '&', PHP_QUERY_RFC3986);

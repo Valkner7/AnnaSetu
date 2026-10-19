@@ -84,7 +84,7 @@ if (isset($_GET['lang']) && in_array($_GET['lang'], ['en', 'hi', 'pa'])) {
     exit;
 }
 
-// Load language (default to Hindi if not set, as it's an Indian agri platform)
+// Load language (defaults to English until the visitor picks one from the header switcher)
 $currentLang = $_SESSION['lang'] ?? 'en';
 \App\Helpers\Translator::load($currentLang);
 

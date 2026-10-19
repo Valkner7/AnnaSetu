@@ -34,7 +34,7 @@ Real crop-planning recommendations from price history, nearby and compare mandis
 - `public/`: web root (`index.php`, assets, `uploads/`).
 - `storage/`: cache and runtime files (git-ignored).
 - `ai/mandi_service/`: the Mandi Setu price service (a snapshot copy; see `ai/mandi_service/UPSTREAM.md`).
-- `tools/`: helper scripts (`sync-mandi-service.ps1` refreshes the copy of the price service).
+- `tools/`: helper scripts (`sync-mandi-service.ps1` refreshes the copy of the price service; `start-mandi-service.ps1`, `mandi-daily-job.ps1` and `register-mandi-tasks.ps1` run and schedule it; `check-price-alerts.php` checks alerts).
 - `tests/`: offline checks (no database or network needed).
 
 ## Setup
@@ -57,6 +57,22 @@ python -m uvicorn app:app --port 8000
 This needs Python 3.12 or newer (the service's libraries are pinned for 3.14). Then set `'api_base' => 'http://127.0.0.1:8000'` in `config/mandi.local.php` (plain http is only accepted for localhost). The advisory endpoints (Gemini) need `GEMINI_API_KEY`; the price and forecast pages do not.
 
 The bundled copy has the price data and model as they were when it was copied. The source repo fetches prices every day and retrains, so refresh the copy with `tools\sync-mandi-service.ps1` to pick that up.
+
+### Schedule the daily fetch and the alert check (Windows)
+
+The price source only serves the current day, so a day that is not fetched is lost. Three Windows scheduled tasks (for your user, no administrator needed) take care of it:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools\register-mandi-tasks.ps1
+```
+
+- **Price service** starts when you log in (`tools\start-mandi-service.ps1`).
+- **Daily fetch** at 22:30 (or when the PC is next on): `tools\mandi-daily-job.ps1` fetches in your own clone of the price repo (default `C:\xampp\htdocs\mandi-fetch`, see `tools\daily-mandi-fetch.ps1`), then copies the new CSV files into `ai\mandi_service` and clears the cache. Add `-Retrain` to the register command to retrain the model as well.
+- **Price alerts** are checked every 30 minutes with `tools\check-price-alerts.php` (needs MySQL running).
+
+Logs are in `storage\logs\`. Remove the tasks with `tools\register-mandi-tasks.ps1 -Remove`.
+
+The daily job overwrites the tracked CSV (and, with `-Retrain`, the model) in `ai\mandi_service`, so `git status` shows them as modified. Do not commit that every day; use `tools\sync-mandi-service.ps1` when you want the repository copy refreshed on purpose.
 
 ### Settings
 

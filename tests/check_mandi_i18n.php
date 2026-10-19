@@ -60,7 +60,7 @@ foreach (['en', 'hi', 'pa'] as $l) {
     check("$l view lists the crops", strpos($html, '>' . e($expectCrop) . '<') !== false);
     check("$l crop label is " . ($l === 'en' ? 'plain' : 'translated'), $l === 'en' ? $expectCrop === 'Potato' : $expectCrop !== 'Potato' && strpos($expectCrop, '(Potato)') !== false);
     // The strings handed to JS must round-trip as valid JSON.
-    preg_match('/var T = (\{.*?\});\n/s', $html, $m);
+    preg_match('/var T = (\{.*?\});\r?\n/s', $html, $m);
     $t = json_decode($m[1] ?? '', true);
     check("$l JS strings are valid JSON", is_array($t) && count($t) === 17);
     check("$l view has no raw mp_crop key", !preg_match("/mp_crop_/", $html));

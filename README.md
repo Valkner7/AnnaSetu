@@ -12,17 +12,22 @@ A multilingual (English, Hindi, Punjabi) PHP web app that connects farmers, buye
 - **Farmer tools:** land and crop records, crop planning page, produce listings (with a mandi price hint on the sell form).
 - **Marketplaces:** produce marketplace with cart and orders for buyers; equipment fleet and booking for owners and farmers.
 - **Market Prices page:** crop and mandi picker, latest price, 7-day forecast, a price-history chart (last 60 reported days plus the projection, drawn with Chart.js) and a data-age notice, served by the price service below.
+- **Compare Mandis:** the same crop in several mandis side by side, plus a "use my location" button that lists the nearest mandis.
+- **Crop planning:** recommendations come from real price comparison (the older simulated values are gone).
+- **Ask Mandi Setu (`?url=advisory`):** type a question or speak it (browser speech recognition), for one mandi or a comparison. The answer can be read aloud as MP3. Needs `GEMINI_API_KEY` for natural wording; without it a plain template answer is given. Each user is limited to 12 questions per 10 minutes, and the key stays on the server.
+- **Price alerts (`?url=alerts`):** set a price above/below a level for a crop and mandi. A check compares the newest reported price with the alert, marks it "Reached" and shows it on the page and the dashboard. Alerts are in-app only (no SMS or WhatsApp). Stored in MySQL (`price_alerts`).
+- **Dashboard card:** a "Market Prices" card with links, the number of reached/active alerts and a health badge for the price service.
 - **Languages:** English, Hindi and Punjabi (`lang/en.php`, `lang/hi.php`, `lang/pa.php`), switched from the page header. On Market Prices everything is shown in the chosen language: labels, crop names (e.g. आलू (Potato)), the trend word, the confidence note and the data-age notices. The price service itself writes English, so AnnaSetu translates those texts from the dates and numbers it sends (`app/Helpers/MandiText.php`). The Hindi and Punjabi wording has not been reviewed by a native speaker yet.
 - **Security basics:** session CSRF token on every POST, escaped view output, validated and re-encoded image uploads, login throttling, hardened session cookies and security headers.
 
 ## Roadmap (not built yet)
 
-Real crop-planning recommendations from price history, nearby and compare mandis, voice/text advisory, price alerts, storage marketplace, logistics, IoT monitoring and AI crop grading.
+Storage marketplace, logistics, IoT monitoring and AI crop grading.
 
 ## Technology
 
 - **App:** PHP 8.2+ (PDO, cURL), MySQL/MariaDB, Apache (developed on XAMPP), Bootstrap 5, plain JavaScript, Chart.js.
-- **Price service (Mandi Setu):** a Python/FastAPI app in `ai/mandi_service/` (see `ai/mandi_service/README.md`). It runs as its own process, because the PHP app cannot run the forecast model. AnnaSetu calls it server-side and caches responses in `storage/`, serving stale data if the service is down. By default it uses the copy hosted on Render; to use the bundled copy, see "Run the price service locally" below.
+- **Price service (Mandi Setu):** a Python/FastAPI app in `ai/mandi_service/` (see `ai/mandi_service/README.md`). It runs as its own process, because the PHP app cannot run the forecast model. AnnaSetu calls it server-side and caches responses in `storage/`, serving stale data if the service is down. AnnaSetu tries the bundled copy on this computer first (`http://127.0.0.1:8001`) and falls back to the copy hosted on Render if it is not running; see "Run the price service locally" below.
 
 ## Folder structure
 
@@ -30,7 +35,7 @@ Real crop-planning recommendations from price history, nearby and compare mandis
 - `views/`: PHP templates.
 - `lang/`: translation files.
 - `config/`: settings. `database.php` and `mandi.local.php` are git-ignored; copy the `*.example.php` files.
-- `database/`: SQL schema files (`schema_phase1.sql` to `schema_phase6.sql`).
+- `database/`: SQL schema files (`schema_phase1.sql` to `schema_phase7.sql`).
 - `public/`: web root (`index.php`, assets, `uploads/`).
 - `storage/`: cache and runtime files (git-ignored).
 - `ai/mandi_service/`: the Mandi Setu price service (a snapshot copy; see `ai/mandi_service/UPSTREAM.md`).
@@ -41,22 +46,23 @@ Real crop-planning recommendations from price history, nearby and compare mandis
 
 1. Copy `config/database.example.php` to `config/database.php` and fill in your MySQL details.
 2. Create the database and run `setup_db.php`, then the schema files in `database/` in order if you need them separately.
-3. Optional: copy `config/mandi.local.example.php` to `config/mandi.local.php` to change the price service address or send a shared secret.
-4. Serve `public/` with Apache (e.g. XAMPP) and open it in a browser.
+3. Create the price alerts table: `php run_schema7.php` (or import `database/schema_phase7.sql`).
+4. Optional: copy `config/mandi.local.example.php` to `config/mandi.local.php` to change the price service address or send a shared secret.
+5. Serve `public/` with Apache (e.g. XAMPP) and open it in a browser.
 
-### Run the price service locally (optional)
+### Run the price service locally
 
-By default AnnaSetu uses the hosted service. To run the bundled copy on your own machine instead:
+AnnaSetu calls the bundled price service at `http://127.0.0.1:8001` first and uses the hosted Render copy only if the local one is unreachable (or returns a server error). To start the local one (Windows; needs Python 3.12 or newer, found automatically, the `py` launcher works too):
 
+```powershell
+powershell -ExecutionPolicy Bypass -File tools\start-mandi-service.ps1
 ```
-cd ai\mandi_service
-pip install -r requirements.txt
-python -m uvicorn app:app --port 8000
-```
 
-This needs Python 3.12 or newer (the service's libraries are pinned for 3.14). Then set `'api_base' => 'http://127.0.0.1:8000'` in `config/mandi.local.php` (plain http is only accepted for localhost). The advisory endpoints (Gemini) need `GEMINI_API_KEY`; the price and forecast pages do not.
+The first run creates `ai\mandi_service\.venv` and installs the libraries (a few minutes). Options: `-Port`, `-Install` (reinstall libraries), `-Hidden` (no window, log in `storage\logs\`). If you change the port, set `'api_base'` in `config/mandi.local.php` to match. To turn the hosted fallback off, set `'fallback_base' => ''` there.
 
-The bundled copy has the price data and model as they were when it was copied. The source repo fetches prices every day and retrains, so refresh the copy with `tools\sync-mandi-service.ps1` to pick that up.
+Optional settings for the service (Gemini key for the advisory page, shared secret) go in `config\mandi-service.env`; copy `config\mandi-service.env.example` (the copy is git-ignored). The price and forecast pages do not need a key.
+
+The bundled copy has the data and model from when it was copied or last refreshed by the daily job. Refresh it deliberately with `tools\sync-mandi-service.ps1`.
 
 ### Schedule the daily fetch and the alert check (Windows)
 
@@ -79,7 +85,8 @@ The daily job overwrites the tracked CSV (and, with `-Retrain`, the model) in `a
 | Setting | Where | Purpose |
 |---|---|---|
 | `APP_BASE_URL` | environment variable | Overrides the detected base path (default is derived from the script path, so the app works in any folder). |
-| `MANDI_API_BASE` | environment variable or `api_base` in `mandi.local.php` | Address of the price service (hosted or local). |
+| `MANDI_API_BASE` | environment variable or `api_base` in `mandi.local.php` | Address of the price service (default `http://127.0.0.1:8001`). |
+| `fallback_base` | `mandi.local.php` | Hosted copy used when the local service is down (default Render; `''` turns it off). |
 | `MANDI_API_SECRET` | environment variable or `api_secret` in `mandi.local.php` | Shared secret sent to the advisory endpoints; must match `API_SHARED_SECRET` on the service. Never commit it. |
 
 ## Tests

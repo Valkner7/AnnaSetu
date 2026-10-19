@@ -22,6 +22,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: "8.3"
+          extensions: curl, pdo_sqlite
 
       - name: Lint all PHP files
         run: |
@@ -36,7 +37,14 @@ jobs:
           status=0
           for t in tests/check_*.php; do
             echo "== $t"
-            php "$t" || status=1
+            php "$t" > /tmp/check.out 2>&1 || status=1
+            cat /tmp/check.out
+            # A SKIP means a test did not really run (for example a missing
+            # PHP extension). Treat that as a failure so it cannot hide.
+            if grep -q '^SKIP' /tmp/check.out; then
+              echo "::error::$t was skipped"
+              status=1
+            fi
           done
           exit $status
 

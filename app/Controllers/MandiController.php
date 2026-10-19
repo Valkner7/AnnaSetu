@@ -217,14 +217,22 @@ class MandiController {
         $rows = [];
         foreach (($res['data']['mandis'] ?? []) as $m) {
             // Only mandis that actually have a price for this crop are useful for comparing.
-            if (!is_array($m) || !is_string($m['mandi'] ?? null) || !is_numeric($m['distance_km'] ?? null) || !is_numeric($m['latest_price'] ?? null)) {
+            if (!is_array($m) || !is_string($m['mandi'] ?? null) || !is_numeric($m['distance_km'] ?? null)) {
                 continue;
             }
+            // The service sends {"date": ..., "price": ...}; a plain number is accepted too.
+            $lp = $m['latest_price'] ?? null;
+            $price = is_array($lp) ? ($lp['price'] ?? null) : $lp;
+            if (!is_numeric($price) || (float) $price <= 0) {
+                continue;
+            }
+            $date = (is_array($lp) && is_string($lp['date'] ?? null) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $lp['date'])) ? $lp['date'] : null;
             $rows[] = [
                 'mandi' => $m['mandi'],
                 'district' => is_string($m['district'] ?? null) ? $m['district'] : '',
                 'distance_km' => round((float) $m['distance_km'], 1),
-                'latest_price' => (float) $m['latest_price'],
+                'latest_price' => (float) $price,
+                'latest_date' => $date,
             ];
             if (count($rows) === 5) {
                 break;

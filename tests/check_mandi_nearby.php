@@ -23,7 +23,7 @@ class FakeNear extends MandiService {
         if (self::$mode === 'down') { return ['ok' => false, 'status' => 0, 'error' => 'down', 'data' => null]; }
         $m = [
             ['mandi' => 'Rayya', 'district' => 'Amritsar', 'distance_km' => 12.34, 'latest_price' => null],
-            ['mandi' => 'Jalandhar', 'district' => 'Jalandhar', 'distance_km' => 3.21, 'latest_price' => 540],
+            ['mandi' => 'Jalandhar', 'district' => 'Jalandhar', 'distance_km' => 3.21, 'latest_price' => ['date' => '2026-10-18', 'price' => 540]],
             ['mandi' => 'Nakodar', 'district' => 'Jalandhar', 'distance_km' => 20, 'latest_price' => 555.5],
             ['mandi' => 'Phagwara', 'district' => 'Kapurthala', 'distance_km' => 30, 'latest_price' => 'abc'],
             'junk',
@@ -70,6 +70,8 @@ $rows = $r['data']['mandis'];
 check('only mandis with a numeric price kept', !in_array('Rayya', array_column($rows, 'mandi'), true) && !in_array('Phagwara', array_column($rows, 'mandi'), true));
 check('at most 5 returned', count($rows) === 5);
 check('nearest first', array_column($rows, 'mandi') === ['Jalandhar', 'Nakodar', 'Kapurthala', 'Ludhiana', 'Khanna']);
+check('price given as {date, price} (the real service shape) is read, with its date', $rows[0]['mandi'] === 'Jalandhar' && $rows[0]['latest_price'] == 540 && $rows[0]['latest_date'] === '2026-10-18');
+check('plain numeric price still works and has no date', $rows[1]['latest_price'] === 555.5 && $rows[1]['latest_date'] === null);
 check('distance rounded to 1 decimal', $rows[0]['distance_km'] == 3.2);
 check('coordinates sent rounded to 2 decimals, with the crop', in_array('/api/nearby-mandis?lat=31.32&lon=75.58&crop=Potato&limit=15', FakeNear::$calls, true));
 list($r) = call(['crop' => 'Potato', 'lat' => '31.3', 'lon' => '75.5'], 'none');

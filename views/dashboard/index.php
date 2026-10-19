@@ -13,6 +13,8 @@
         </div>
     </div>
 
+    <?php require __DIR__ . '/_market_card.php'; ?>
+
     <?php if($userRole === 'farmer'): ?>
         <!-- ============================== -->
         <!-- FARMER PANEL WITH NAVIGATION -->

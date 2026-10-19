@@ -2,6 +2,11 @@
 namespace App\Controllers;
 
 class DashboardController {
+    /** Alert model for the card; overridden in tests. Null if it cannot be created. */
+    protected function alerts(): ?\App\Models\PriceAlert {
+        try { return new \App\Models\PriceAlert(); } catch (\Throwable $e) { return null; }
+    }
+
     public function index() {
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
@@ -61,6 +66,9 @@ class DashboardController {
             $poModel = new \App\Models\ProcurementOrder();
             $myOrders = $poModel->getOrdersForFarmer($_SESSION['user_id']);
         }
+
+        // Market Prices card: alert counts only (the health badge loads itself in the browser).
+        $marketCard = \App\Helpers\MarketCard::summary($this->alerts(), (int) $_SESSION['user_id']);
 
         $title = "Dashboard - SmartHarvest AI";
         $contentView = __DIR__ . '/../../views/dashboard/index.php';

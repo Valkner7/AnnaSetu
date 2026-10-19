@@ -1,5 +1,5 @@
 <?php
-// Price alerts page. Variables from AlertController::index(): $crops, $myAlerts, $newlyReached, $maxActive.
+// Price alerts page. Variables from AlertsController::index(): $crops, $myAlerts, $newlyReached, $maxActive.
 $mandiActive = 'alerts';
 $t = function ($k) { return __($k); };
 $money = function ($n) { return '₹' . number_format((float) $n, 2, '.', ','); };

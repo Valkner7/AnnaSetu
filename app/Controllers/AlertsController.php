@@ -20,7 +20,7 @@ require_once __DIR__ . '/../Helpers/PriceAlertRules.php';
  * sent by SMS or WhatsApp). All changes are POST (the session CSRF token is
  * checked in public/index.php) and every query is scoped to the user.
  */
-class AlertController {
+class AlertsController {
     protected $userId;
 
     public function __construct() {

@@ -1,5 +1,5 @@
 <?php
-// Tests for AlertController: validation, ownership, POST-only, and the page render. No network or MySQL.
+// Tests for AlertsController: validation, ownership, POST-only, and the page render. No network or MySQL.
 // Run: php tests/check_alert_controller.php
 if (!extension_loaded('pdo_sqlite')) { echo "SKIP: pdo_sqlite is not installed.\n"; exit(0); }
 define('BASE_URL', '/app');
@@ -12,9 +12,9 @@ require __DIR__ . '/../app/Models/PriceAlert.php';
 require __DIR__ . '/../app/Helpers/MandiConfig.php';
 require __DIR__ . '/../app/Services/MandiService.php';
 require __DIR__ . '/../app/Services/PriceAlertChecker.php';
-require __DIR__ . '/../app/Controllers/AlertController.php';
+require __DIR__ . '/../app/Controllers/AlertsController.php';
 
-use App\Controllers\AlertController;
+use App\Controllers\AlertsController;
 use App\Models\PriceAlert;
 use App\Services\MandiService;
 
@@ -43,7 +43,7 @@ class FakeSvc extends MandiService {
         return ['ok' => false, 'status' => 404, 'error' => 'x', 'data' => null];
     }
 }
-class TestAlerts extends AlertController {
+class TestAlerts extends AlertsController {
     public static $pdo; public static $uid = 1; public static $cache;
     public function __construct() { $this->userId = self::$uid; }
     protected function service() { return new FakeSvc(['cache_dir' => TestAlerts::$cache ?: (sys_get_temp_dir() . '/ac_' . getmypid()), 'cache_ttl_seconds' => 0]); }

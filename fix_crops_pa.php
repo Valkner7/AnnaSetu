@@ -1,17 +1,13 @@
 <?php
+// Re-applies the Punjabi crop names. `php setup_db.php` now does this
+// automatically (and creates the name_pa column), so this is only needed to
+// overwrite names. Unlike setup_db.php it replaces existing values.
 require __DIR__ . '/app/Core/Database.php';
 $pdo = App\Core\Database::getInstance()->getConnection();
 
 $pdo->exec("SET NAMES utf8mb4;");
 
-$updates = [
-    'Wheat' => 'ਕਣਕ (Kanak)',
-    'Rice (Paddy)' => 'ਝੋਨਾ (Jhona)',
-    'Tomato' => 'ਟਮਾਟਰ (Tamatar)',
-    'Onion' => 'ਪਿਆਜ਼ (Pyaz)',
-    'Potato' => 'ਆਲੂ (Aloo)',
-    'Sugarcane' => 'ਗੰਨਾ (Ganna)'
-];
+$updates = require __DIR__ . '/database/crops_name_pa.php';
 
 $stmt = $pdo->prepare("UPDATE crops SET name_pa = ? WHERE name = ?");
 

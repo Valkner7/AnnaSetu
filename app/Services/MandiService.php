@@ -32,7 +32,9 @@ class MandiService {
     }
 
     // Endpoints that spend Gemini / text-to-speech quota. The shared secret (M10)
-    // is sent to these and to nothing else.
+    // is sent to these paths, and only to the configured primary address
+    // (api_base), never to the fallback address: the fallback is a different
+    // deployment with its own secret, so sending ours there would leak it.
     public const SECRET_PATHS = ['/advisory', '/compare-advisory', '/voice-advisory'];
 
     // Used only when the price service has never been reachable (no cache yet).
@@ -238,10 +240,15 @@ class MandiService {
         }
     }
 
-    /** Headers for one upstream request. The secret goes only to SECRET_PATHS. */
-    protected function requestHeaders($path) {
+    /**
+     * Headers for one upstream request. The secret goes only to SECRET_PATHS,
+     * and only to the primary address. $base is the host being called; null
+     * means "the primary" (kept so older callers and tests still work).
+     */
+    protected function requestHeaders($path, $base = null) {
         $headers = ['Accept: application/json'];
-        if ($this->apiSecret !== '' && in_array($path, self::SECRET_PATHS, true)) {
+        $toPrimary = $base === null || strcasecmp(rtrim((string) $base, '/'), $this->base) === 0;
+        if ($toPrimary && $this->apiSecret !== '' && in_array($path, self::SECRET_PATHS, true)) {
             $headers[] = 'X-Api-Secret: ' . $this->apiSecret;
         }
         return $headers;
@@ -293,7 +300,7 @@ class MandiService {
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_TIMEOUT => $this->timeout,
             CURLOPT_CONNECTTIMEOUT => $connect,
-            CURLOPT_HTTPHEADER => $this->requestHeaders($path),
+            CURLOPT_HTTPHEADER => $this->requestHeaders($path, $base),
         ]);
         $body = curl_exec($ch);
         $errno = curl_errno($ch);
@@ -328,7 +335,7 @@ class MandiService {
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_TIMEOUT => $this->timeout,
             CURLOPT_CONNECTTIMEOUT => $connect,
-            CURLOPT_HTTPHEADER => $this->requestHeaders($path),
+            CURLOPT_HTTPHEADER => $this->requestHeaders($path, $base),
         ]);
         $body = curl_exec($ch);
         $errno = curl_errno($ch);

@@ -22,7 +22,8 @@ CREATE TABLE IF NOT EXISTS crops (
     name_hi VARCHAR(100) DEFAULT NULL, -- Hindi translation
     expected_duration_days INT NOT NULL,
     water_requirement VARCHAR(50) DEFAULT 'medium',
-    status ENUM('active', 'inactive') DEFAULT 'active'
+    status ENUM('active', 'inactive') DEFAULT 'active',
+    UNIQUE KEY uniq_crop_name (name) -- makes INSERT IGNORE below really skip crops that already exist
 );
 
 -- Insert some default crops

@@ -60,6 +60,35 @@ try {
         echo "Applied $name\n";
     }
 
+    // crops had no unique key on name, so INSERT IGNORE in schema_phase2.sql never skipped
+    // anything: every re-run of this script added the six default crops again, and the farmer's
+    // crop list showed each one several times. Databases set up that way still have the extra
+    // rows, so on them: point farmer_crops at the oldest row of each name (the FK is RESTRICT,
+    // so references must move before rows can go), delete the rest, then add the unique key.
+    // On a fresh or already-fixed database none of this changes anything.
+    $hasKey = $pdo->prepare(
+        'SELECT COUNT(*) FROM information_schema.STATISTICS
+          WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND INDEX_NAME = ?'
+    );
+    $hasKey->execute([EXPECTED_DB, 'crops', 'uniq_crop_name']);
+    if ((int)$hasKey->fetchColumn() === 0) {
+        $keep = '(SELECT name, MIN(id) AS keep_id FROM crops GROUP BY name) k';
+        $before = (int)$pdo->query('SELECT COUNT(*) FROM crops')->fetchColumn();
+        $pdo->beginTransaction();
+        try {
+            $pdo->exec("UPDATE farmer_crops fc JOIN crops d ON fc.crop_id = d.id
+                        JOIN $keep ON k.name = d.name SET fc.crop_id = k.keep_id WHERE d.id <> k.keep_id");
+            $pdo->exec("DELETE d FROM crops d JOIN $keep ON k.name = d.name WHERE d.id <> k.keep_id");
+            $pdo->commit();
+        } catch (PDOException $e) {
+            $pdo->rollBack();
+            throw $e;
+        }
+        $removed = $before - (int)$pdo->query('SELECT COUNT(*) FROM crops')->fetchColumn();
+        $pdo->exec('ALTER TABLE crops ADD UNIQUE KEY uniq_crop_name (name)');
+        echo "Added unique key on crops.name" . ($removed ? " (removed $removed duplicate crop rows)" : "") . ".\n";
+    }
+
     // crops.name_pa (Punjabi crop names) is read by the buyer marketplace and profile
     // pages but is not in any schema file. MySQL 8 has no ADD COLUMN IF NOT EXISTS
     // (MariaDB does), so check information_schema first. Safe to run repeatedly.

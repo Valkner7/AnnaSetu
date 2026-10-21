@@ -80,7 +80,8 @@ class AuthController {
         }
 
         $passwordHash = password_hash($data['password'], PASSWORD_DEFAULT);
-        $language = $data['language'] ?? 'hi';
+        // Only the languages the app has text for; anything else gets the default (the column holds 10 characters).
+        $language = in_array($data['language'] ?? null, ['en', 'hi', 'pa'], true) ? $data['language'] : 'hi';
 
         $userId = $userModel->create($data['first_name'], $data['last_name'], $data['phone'], $passwordHash, $language);
 

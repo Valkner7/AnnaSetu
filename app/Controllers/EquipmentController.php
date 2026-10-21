@@ -97,16 +97,73 @@ class EquipmentController {
         }
 
         $db = Database::getInstance()->getConnection();
-        // Verify owner owns this equipment booking
-        $stmt = $db->prepare("
-            UPDATE equipment_bookings b 
-            JOIN equipments e ON b.equipment_id = e.id 
-            SET b.status = ? 
-            WHERE b.id = ? AND e.owner_id = ?
-        ");
-        $success = $stmt->execute([$status, $bookingId, $_SESSION['user_id']]);
 
-        echo json_encode(['success' => $success, 'message' => $success ? 'Status updated!' : 'Failed.']);
+        // Read the booking and lock it together with its equipment row, in one transaction.
+        // Locking the equipment row means two simultaneous confirms for the same machine
+        // take turns, so the second one sees the first and cannot also win (double booking).
+        // The join on owner_id also checks that this owner owns the equipment.
+        $db->beginTransaction();
+        try {
+            $stmt = $db->prepare("
+                SELECT b.equipment_id, b.booking_date, b.status
+                FROM equipment_bookings b
+                JOIN equipments e ON b.equipment_id = e.id
+                WHERE b.id = ? AND e.owner_id = ?
+                FOR UPDATE
+            ");
+            $stmt->execute([$bookingId, $_SESSION['user_id']]);
+            $booking = $stmt->fetch();
+
+            if (!$booking) {
+                $db->rollBack();
+                echo json_encode(['success' => false, 'message' => 'Booking not found.']);
+                return;
+            }
+
+            // A booking only moves forward: pending -> confirmed or cancelled,
+            // confirmed -> completed or cancelled. Completed and cancelled are final.
+            $allowed = [
+                'pending'   => ['confirmed', 'cancelled'],
+                'confirmed' => ['completed', 'cancelled'],
+            ];
+            if (!in_array($status, $allowed[$booking['status']] ?? [], true)) {
+                $db->rollBack();
+                echo json_encode(['success' => false, 'message' => $booking['status'] === $status
+                    ? 'This booking is already ' . $status . '.'
+                    : 'A ' . $booking['status'] . ' booking cannot be changed to ' . $status . '.']);
+                return;
+            }
+
+            // One confirmed booking per machine per day (the table stores only a date).
+            if ($status === 'confirmed' && $this->hasConfirmedBooking((int)$booking['equipment_id'], $booking['booking_date'], $bookingId)) {
+                $db->rollBack();
+                echo json_encode(['success' => false, 'message' => 'This equipment is already confirmed for another farmer on that date.']);
+                return;
+            }
+
+            $update = $db->prepare("UPDATE equipment_bookings SET status = ? WHERE id = ?");
+            $update->execute([$status, $bookingId]);
+            $changed = $update->rowCount() > 0;
+            $db->commit();
+        } catch (\Throwable $e) {
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
+            error_log('updateBookingStatus failed: ' . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Could not update the booking. Please try again.']);
+            return;
+        }
+
+        echo json_encode(['success' => $changed, 'message' => $changed ? 'Status updated!' : 'The booking was not changed.']);
+    }
+
+    /** True when another booking for this machine on this date is already confirmed. */
+    private function hasConfirmedBooking(int $equipmentId, string $date, int $exceptBookingId = 0): bool {
+        $db = Database::getInstance()->getConnection();
+        $stmt = $db->prepare("SELECT 1 FROM equipment_bookings
+                              WHERE equipment_id = ? AND booking_date = ? AND status = 'confirmed' AND id <> ? LIMIT 1");
+        $stmt->execute([$equipmentId, $date, $exceptBookingId]);
+        return (bool)$stmt->fetchColumn();
     }
 
 
@@ -175,6 +232,21 @@ class EquipmentController {
         }
         
         $totalCost = $eq['rate_per_hour'] * $hours;
+
+        // Refuse a day that is already confirmed for this machine, and a repeat of this
+        // farmer's own open request. Several farmers may still have pending requests for the
+        // same day; the owner picks one, and confirming is checked again when they do.
+        if ($this->hasConfirmedBooking($data['equipment_id'], $bookingDate)) {
+            echo json_encode(['success' => false, 'message' => 'This equipment is already booked on that date. Please choose another date.']);
+            return;
+        }
+        $dup = $db->prepare("SELECT 1 FROM equipment_bookings
+                             WHERE equipment_id = ? AND farmer_id = ? AND booking_date = ? AND status IN ('pending', 'confirmed') LIMIT 1");
+        $dup->execute([$data['equipment_id'], $_SESSION['user_id'], $bookingDate]);
+        if ($dup->fetchColumn()) {
+            echo json_encode(['success' => false, 'message' => 'You already have a booking request for this equipment on that date.']);
+            return;
+        }
 
         $insert = $db->prepare("INSERT INTO equipment_bookings (equipment_id, farmer_id, land_id, booking_date, duration_hours, total_cost) VALUES (?, ?, ?, ?, ?, ?)");
         $success = $insert->execute([

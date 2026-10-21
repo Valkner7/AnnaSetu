@@ -18,6 +18,13 @@ $cases = [
   ['text empty',        V::text("   ", 5) === null],
   ['text too long',     V::text("abcdef", 5) === null],
   ['oneOf bad',         V::oneOf("admin", ["a","b"]) === null],
+  ['whole ok',          V::wholeNumber("4", 1, 720) === 4],
+  ['whole from float',  V::wholeNumber(4.0, 1, 720) === 4],
+  ['whole rejects 2.5', V::wholeNumber("2.5", 1, 720) === null],
+  ['whole rejects 0',   V::wholeNumber(0, 1, 720) === null],
+  ['whole rejects big', V::wholeNumber("721", 1, 720) === null],
+  ['whole rejects text', V::wholeNumber("abc", 1, 720) === null],
+  ['whole zero allowed when min is 0', V::wholeNumber("0", 0, 10) === 0],
 ];
 $fail = 0;
 foreach ($cases as [$name, $ok]) { echo ($ok ? "PASS " : "FAIL ") . $name . "\n"; $fail += $ok ? 0 : 1; }

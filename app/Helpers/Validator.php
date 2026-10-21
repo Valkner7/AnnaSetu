@@ -18,6 +18,12 @@ class Validator {
         return ($n >= $min && $n <= $max) ? $n : null;
     }
 
+    /** Whole number within [min, max] (for columns that hold integers); rejects 2.5, \"abc\", \"1e9\". */
+    public static function wholeNumber($v, int $min, int $max): ?int {
+        $n = self::number($v, $min, $max);
+        return ($n !== null && $n == floor($n)) ? (int)$n : null;
+    }
+
     /** Positive integer id. */
     public static function id($v): ?int {
         if (is_int($v) && $v > 0) {

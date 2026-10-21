@@ -9,6 +9,10 @@ use App\Core\Database;
 use App\Helpers\ImageUpload;
 
 class EquipmentController {
+    // Must match the ENUM on equipments.type (database/schema_phase4.sql) and the dropdown in
+    // views/equipment/fleet.php; tests/check_input_validation.php keeps all three in step.
+    private const EQUIPMENT_TYPES = ['Tractor', 'Harvester', 'Drone', 'Implement', 'Other'];
+
     
     public function __construct() {
         if (session_status() === PHP_SESSION_NONE) {
@@ -52,7 +56,8 @@ class EquipmentController {
         }
         // Server-side validation (N4).
         $eqName = Validator::text($_POST['name'], 100);
-        $eqType = Validator::text($_POST['type'], 50);
+        // equipments.type is an ENUM in the database; anything else would fail with a raw error.
+        $eqType = Validator::oneOf($_POST['type'] ?? null, self::EQUIPMENT_TYPES);
         $eqRate = Validator::number($_POST['rate_per_hour'], 1, 100000);   // Rs per hour
         if ($eqName === null || $eqType === null || $eqRate === null) {
             echo json_encode(['success' => false, 'message' => 'Enter a valid name, type and hourly rate.']);
@@ -144,13 +149,14 @@ class EquipmentController {
             return;
         }
 
-        // Server-side validation (N4): real ids, a future date, 1 to 720 hours.
+        // Server-side validation (N4): real ids, a future date, 1 to 720 whole hours
+        // (equipment_bookings.duration_hours is an INT, so 2.5 would be stored as 3 but charged as 2.5).
         $equipmentId = Validator::id($data['equipment_id']);
         $landId      = Validator::id($data['land_id']);
         $bookingDate = Validator::date($data['booking_date'], true);
-        $hours       = Validator::number($data['duration_hours'], 0.5, 720);
+        $hours       = Validator::wholeNumber($data['duration_hours'], 1, 720);
         if ($equipmentId === null || $landId === null || $bookingDate === null || $hours === null) {
-            echo json_encode(['success' => false, 'message' => 'Enter a valid date (not in the past) and duration.']);
+            echo json_encode(['success' => false, 'message' => 'Enter a valid date (not in the past) and a whole number of hours (1 to 720).']);
             return;
         }
         $data['equipment_id'] = $equipmentId;

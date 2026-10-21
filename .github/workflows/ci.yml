@@ -80,7 +80,7 @@ jobs:
       - name: Run service tests
         run: |
           status=0
-          for t in test_explanations test_observability test_data_age test_spa_routes test_api_secret test_question_limit; do
+          for t in test_explanations test_observability test_data_age test_spa_routes test_api_secret test_question_limit test_training_gate; do
             echo "== $t"
             python $t.py || status=1
           done

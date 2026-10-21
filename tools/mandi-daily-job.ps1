@@ -102,7 +102,11 @@ try {
             & $venvPy "train_forecast_model.py" 2>&1 | ForEach-Object { Log "train: $_" }
             $trainExit = $LASTEXITCODE
             $ErrorActionPreference = "Stop"
-            if ($trainExit -ne 0) { throw "Retraining failed (exit $trainExit). The old model is still in use." }
+            if ($trainExit -eq 3) {
+                # Exit code 3 = the trainer's quality gate: the new model did not beat "price stays the
+                # same", so it was not saved. That is the gate working, not a failure of the job.
+                Log "WARNING: the new model did not beat 'price stays the same', so it was NOT saved. The old model stays in use."
+            } elseif ($trainExit -ne 0) { throw "Retraining failed (exit $trainExit). The old model is still in use." }
         } finally { Pop-Location }
     }
 

@@ -1,4 +1,10 @@
 <?php
+// One-off maintenance script: run it from the command line only (php run_schema4.php).
+// Refused over HTTP so a server that exposes the project root cannot run it.
+if (PHP_SAPI !== 'cli') {
+    http_response_code(403);
+    exit("Run this from the command line: php run_schema4.php\n");
+}
 require __DIR__ . '/app/Core/Database.php';
 $pdo = App\Core\Database::getInstance()->getConnection();
 

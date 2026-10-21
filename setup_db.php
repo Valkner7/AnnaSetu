@@ -60,6 +60,25 @@ try {
         echo "Applied $name\n";
     }
 
+    // crops.name_pa (Punjabi crop names) is read by the buyer marketplace and profile
+    // pages but is not in any schema file. MySQL 8 has no ADD COLUMN IF NOT EXISTS
+    // (MariaDB does), so check information_schema first. Safe to run repeatedly.
+    $has = $pdo->prepare(
+        'SELECT COUNT(*) FROM information_schema.COLUMNS
+          WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND COLUMN_NAME = ?'
+    );
+    $has->execute([EXPECTED_DB, 'crops', 'name_pa']);
+    if ((int)$has->fetchColumn() === 0) {
+        $pdo->exec('ALTER TABLE crops ADD COLUMN name_pa VARCHAR(100) DEFAULT NULL AFTER name_hi');
+        echo "Added crops.name_pa.\n";
+    }
+    // Fill only empty values so a re-run never overwrites names edited by hand.
+    $fill = $pdo->prepare("UPDATE crops SET name_pa = ? WHERE name = ? AND (name_pa IS NULL OR name_pa = '')");
+    foreach (require __DIR__ . '/database/crops_name_pa.php' as $en => $pa) {
+        $fill->execute([$pa, $en]);
+    }
+    echo "Punjabi crop names loaded.\n";
+
     $tables = $pdo->query('SHOW TABLES')->fetchAll(PDO::FETCH_COLUMN);
     echo count($files) . " schema files applied. Tables (" . count($tables) . "): " . implode(', ', $tables) . "\n";
     echo "Setup complete.\n";

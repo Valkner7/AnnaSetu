@@ -16,6 +16,14 @@ session_start();
 header('X-Content-Type-Options: nosniff');
 header('X-Frame-Options: SAMEORIGIN');
 header('Referrer-Policy: strict-origin-when-cross-origin');
+// Browser features: the app uses the location button (mandi/compare) and speech recognition
+// (mandi/advisory); everything else is switched off for this site and anything it embeds.
+header('Permissions-Policy: geolocation=(self), microphone=(self), camera=(), payment=(), usb=()');
+// Tell browsers to stay on HTTPS (180 days). Sent only on HTTPS, where browsers honour it. No
+// includeSubDomains or preload, so nothing outside this app is affected.
+if ($isHttps) {
+    header('Strict-Transport-Security: max-age=15552000');
+}
 
 // Base URL path of this app (no trailing slash). Derived from where index.php is served,
 // e.g. /smartharvest/public on XAMPP, or empty when public/ is the web root.

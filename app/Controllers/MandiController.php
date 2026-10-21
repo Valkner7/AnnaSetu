@@ -76,10 +76,12 @@ class MandiController {
         }
         $res = $this->service()->getPredict($crop, $mandi);
         if (!$res['ok']) {
-            $msg = ($res['status'] === 404 || $res['status'] === 422)
+            // The service answered "no forecast for this pair": that is a 404, not an outage (502).
+            $noData = ($res['status'] === 404 || $res['status'] === 422);
+            $msg = $noData
                 ? 'No forecast is available for this crop and mandi yet.'
                 : $this->serviceDownMessage($res);
-            $this->json(['ok' => false, 'error' => $msg, 'upstream_status' => $res['status']], 502);
+            $this->json(['ok' => false, 'error' => $msg, 'upstream_status' => $res['status']], $noData ? 404 : 502);
             return;
         }
         $d = $res['data'];
@@ -257,10 +259,11 @@ class MandiController {
         }
         $res = $this->service()->getCompare($crop, $names);
         if (!$res['ok']) {
-            $msg = ($res['status'] === 404 || $res['status'] === 422)
+            $noData = ($res['status'] === 404 || $res['status'] === 422);
+            $msg = $noData
                 ? 'No comparison is available for these mandis yet.'
                 : $this->serviceDownMessage($res);
-            $this->json(['ok' => false, 'error' => $msg, 'upstream_status' => $res['status']], 502);
+            $this->json(['ok' => false, 'error' => $msg, 'upstream_status' => $res['status']], $noData ? 404 : 502);
             return;
         }
         $d = $res['data'];
@@ -284,7 +287,7 @@ class MandiController {
             ];
         }
         if (count($rows) === 0) {
-            $this->json(['ok' => false, 'error' => 'No comparison is available for these mandis yet.'], 502);
+            $this->json(['ok' => false, 'error' => 'No comparison is available for these mandis yet.'], 404);
             return;
         }
         // Our own ranking from the cleaned rows: highest price first.

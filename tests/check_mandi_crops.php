@@ -19,6 +19,8 @@ class FakeMandi extends MandiService {
         if (self::$meta === 'DOWN') { return ['ok' => false, 'status' => 0, 'error' => 'down', 'data' => null]; }
         if ($path === '/meta' && !$params) { return ['ok' => true, 'status' => 200, 'error' => null, 'data' => self::$meta]; }
         if ($path === '/meta') { return ['ok' => true, 'status' => 200, 'error' => null, 'data' => ['mandis' => self::$mandis]]; }
+        if ($path === '/predict' && ($params['mandi'] ?? '') === 'Nowhere') { return ['ok' => false, 'status' => 404, 'error' => 'nf', 'data' => null]; }
+        if ($path === '/predict' && ($params['mandi'] ?? '') === 'Broken') { return ['ok' => false, 'status' => 503, 'error' => 'down', 'data' => null]; }
         if ($path === '/predict') { return ['ok' => true, 'status' => 200, 'error' => null,
             'data' => ['crop' => $params['crop'], 'mandi' => $params['mandi'], 'latest_price' => 582, 'forecast' => []]]; }
         return ['ok' => false, 'status' => 404, 'error' => 'nf', 'data' => null];
@@ -92,6 +94,12 @@ check('mandis: array crop param -> 400, no crash', $r['ok'] === false);
 $_GET = ['crop' => 'Onion', 'mandi' => 'Khanna'];
 $r = run(function () use ($c) { $c->forecast(); });
 check('forecast: supported pair works and is its own data', $r['ok'] === true && $r['data']['crop'] === 'Onion' && $r['data']['mandi'] === 'Khanna', json_encode($r));
+$_GET = ['crop' => 'Potato', 'mandi' => 'Nowhere'];
+$r = run(function () use ($c) { $c->forecast(); });
+check('forecast: unknown mandi -> HTTP 404 with a readable message', $r['ok'] === false && http_response_code() === 404 && strpos($r['error'], 'No forecast is available') === 0, json_encode($r));
+$_GET = ['crop' => 'Potato', 'mandi' => 'Broken'];
+$r = run(function () use ($c) { $c->forecast(); });
+check('forecast: service error (503) is still HTTP 502', $r['ok'] === false && http_response_code() === 502, json_encode($r));
 $_GET = ['crop' => 'Wheat', 'mandi' => 'Khanna'];
 FakeMandi::$calls = [];
 $r = run(function () use ($c) { $c->forecast(); });

@@ -90,7 +90,7 @@ check('skipped mandis listed', $r['data']['skipped'] === ['Nowhere']);
 list($r, $code) = call('Potato', 'Rayya,Khanna', 'down');
 check('outage with no cache -> 502', $r['ok'] === false && $code === 502);
 list($r, $code) = call('Potato', 'Rayya,Khanna', 'notfound');
-check('no data -> readable 502 message', $r['ok'] === false && $code === 502 && strpos($r['error'], 'No comparison') === 0);
+check('no data -> readable 404 message (not an outage)', $r['ok'] === false && $code === 404 && strpos($r['error'], 'No comparison') === 0);
 list($r, $code) = call('Wheat', 'Rayya,Khanna');
 check('unsupported crop -> 400', $r['ok'] === false && $code === 400);
 check('unsupported crop never reaches /compare', !array_filter(FakeCmp::$calls, fn($c) => strpos($c, '/compare') === 0));

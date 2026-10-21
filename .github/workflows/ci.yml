@@ -89,3 +89,52 @@ jobs:
       - name: Run data gap report check
         # Lives in tests/ and tools/ (outside the synced snapshot); needs pandas from the install above.
         run: python ../../tests/check_mandi_data_gap.py
+
+  database-setup:
+    # Runs setup_db.php against a real database server, twice, then checks the result
+    # (tests/db/check_setup_db.php): all tables, 6 crops after re-runs, crops.name_pa, and the
+    # upgrade path for a database that already has duplicate crops. The offline checks above
+    # cannot see any of this. MariaDB is what XAMPP ships; MySQL 8 is the other common server.
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        db: ["mariadb:10.11", "mysql:8.0"]
+    services:
+      db:
+        image: ${{ matrix.db }}
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v6
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: pdo_mysql
+
+      - name: Point the app at the test database
+        run: |
+          cp config/database.example.php config/database.php
+          sed -i "s/your_password_here/root/" config/database.php
+
+      - name: Wait for the database
+        run: |
+          for i in $(seq 1 60); do
+            php -r 'new PDO("mysql:host=127.0.0.1;port=3306", "root", "root");' 2>/dev/null && exit 0
+            sleep 2
+          done
+          echo "::error::database did not start"
+          exit 1
+
+      - name: Run setup_db.php twice
+        run: |
+          php setup_db.php
+          php setup_db.php
+
+      - name: Check the database
+        run: php tests/db/check_setup_db.php

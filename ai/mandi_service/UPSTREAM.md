@@ -15,3 +15,5 @@ powershell -ExecutionPolicy Bypass -File tools\sync-mandi-service.ps1
 ```
 
 The script only reads from the source repo. It never commits or pushes there.
+
+- `api_secret.py`, `app.py`, `routers/alerts.py`, `render.yaml`, `README.md`, `test_api_secret.py` and `test_question_limit.py` come from the source repo's branch `fix/fail-closed-secrets` (commit `bf32db6`): with no secret set, `/check-alerts` answers 503 and the advisory endpoints answer only callers on the same machine. **If that branch is not yet merged into the source `main`, running `tools/sync-mandi-service.ps1` replaces them with the older open-by-default versions.**

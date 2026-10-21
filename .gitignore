@@ -7,6 +7,7 @@ config/mandi-service.env
 ai/mandi_service/.venv/
 ai/mandi_service/__pycache__/
 ai/mandi_service/routers/__pycache__/
+tools/__pycache__/
 
 # User uploads and runtime files
 public/uploads/*

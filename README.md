@@ -39,16 +39,15 @@ Storage marketplace, logistics, IoT monitoring and AI crop grading.
 - `public/`: web root (`index.php`, assets, `uploads/`).
 - `storage/`: cache and runtime files (git-ignored).
 - `ai/mandi_service/`: the Mandi Setu price service (a snapshot copy; see `ai/mandi_service/UPSTREAM.md`).
-- `tools/`: helper scripts (`sync-mandi-service.ps1` refreshes the copy of the price service; `start-mandi-service.ps1`, `mandi-daily-job.ps1` and `register-mandi-tasks.ps1` run and schedule it; `check-price-alerts.php` checks alerts).
+- `tools/`: helper scripts (`linux/` has the cron/systemd versions of the Windows jobs; `sync-mandi-service.ps1` refreshes the copy of the price service; `start-mandi-service.ps1`, `mandi-daily-job.ps1` and `register-mandi-tasks.ps1` run and schedule it; `check-price-alerts.php` checks alerts).
 - `tests/`: offline checks (no database or network needed).
 
 ## Setup
 
 1. Copy `config/database.example.php` to `config/database.php` and fill in your MySQL details.
-2. Create the database and run `setup_db.php`, then the schema files in `database/` in order if you need them separately.
-3. Create the price alerts table: `php run_schema7.php` (or import `database/schema_phase7.sql`).
-4. Optional: copy `config/mandi.local.example.php` to `config/mandi.local.php` to change the price service address or send a shared secret.
-5. Serve `public/` with Apache (e.g. XAMPP) and open it in a browser.
+2. Run `php setup_db.php` from the project folder. It creates the `smartharvest_db` database and applies every schema file in `database/` (phases 1 to 7) in order, including the farmer, buyer, equipment, storage and price-alert tables. It is safe to re-run after pulling new code. `run_schema4.php`, `run_schema5.php` and `run_schema7.php` still work but are no longer needed.
+3. Optional: copy `config/mandi.local.example.php` to `config/mandi.local.php` to change the price service address or send a shared secret.
+4. Serve `public/` with Apache (e.g. XAMPP) and open it in a browser.
 
 ### Run the price service locally
 
@@ -77,6 +76,26 @@ powershell -ExecutionPolicy Bypass -File tools\register-mandi-tasks.ps1
 - **Price alerts** are checked every 30 minutes with `tools\check-price-alerts.php` (needs MySQL running).
 
 Logs are in `storage\logs\`. Remove the tasks with `tools\register-mandi-tasks.ps1 -Remove`.
+
+### Run and schedule on Linux (cron)
+
+Everything above also exists for Linux in `tools/linux/` (needs Python 3.12+, `git`, `curl`, `flock`):
+
+```bash
+bash tools/linux/start-mandi-service.sh            # start the price service (creates .venv on first run)
+bash tools/linux/mandi-daily-job.sh --init         # one time: clone the price repo to ~/mandi-fetch (or set MANDI_REPO)
+bash tools/linux/mandi-daily-job.sh                # fetch today's prices, copy the CSVs in, clear the cache
+bash tools/linux/mandi-daily-job.sh --retrain      # same, then retrain the forecast model
+```
+
+- `tools/linux/crontab.example`: the daily fetch (22:30) and the alert check (every 30 minutes). Paste it with `crontab -e` and fix the install path.
+- `tools/linux/mandi-service.service.example`: a systemd unit that keeps the price service running and starts it at boot.
+- Install the price repo's libraries once before the first fetch: `python3 -m pip install -r ~/mandi-fetch/requirements.txt`.
+- On a server that stays on, a missed day is no longer lost because your own PC was off. If `api.data.gov.in` cannot be reached from the server either, the fetch fails loudly in `storage/logs/mandi-daily-job.log` and the old data keeps being used.
+
+### About the price service's own alert endpoints
+
+The bundled service still contains its own `/check-alerts` and WhatsApp/SMS subscription code from the original Mandi Setu project. AnnaSetu does **not** use them (that part is parked for now). AnnaSetu's price alerts are a separate system: they live in MySQL (`price_alerts`) and are checked by `tools/check-price-alerts.php`, which is the only alert check you need to schedule.
 
 The daily job overwrites the tracked CSV (and, with `-Retrain`, the model) in `ai\mandi_service`, so `git status` shows them as modified. Do not commit that every day; use `tools\sync-mandi-service.ps1` when you want the repository copy refreshed on purpose.
 

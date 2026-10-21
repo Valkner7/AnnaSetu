@@ -1,0 +1,11 @@
+# AnnaSetu scheduled jobs for Linux. Install with:  crontab -e   (paste, then fix the path)
+# Replace /var/www/AnnaSetu with the folder where AnnaSetu is installed.
+
+# Daily price fetch at 22:30 (the source only serves the current day, so do not skip it).
+30 22 * * * cd /var/www/AnnaSetu && bash tools/linux/mandi-daily-job.sh >> storage/logs/cron-daily.log 2>&1
+
+# Same, plus retraining the model once a week (Sunday 23:15). Use this INSTEAD of the line above on Sundays if you like.
+# 15 23 * * 0 cd /var/www/AnnaSetu && bash tools/linux/mandi-daily-job.sh --retrain >> storage/logs/cron-daily.log 2>&1
+
+# Check price alerts every 30 minutes (needs MySQL running).
+*/30 * * * * cd /var/www/AnnaSetu && php tools/check-price-alerts.php >> storage/logs/cron-alerts.log 2>&1

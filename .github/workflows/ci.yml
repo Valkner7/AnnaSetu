@@ -85,3 +85,7 @@ jobs:
             python $t.py || status=1
           done
           exit $status
+
+      - name: Run data gap report check
+        # Lives in tests/ and tools/ (outside the synced snapshot); needs pandas from the install above.
+        run: python ../../tests/check_mandi_data_gap.py

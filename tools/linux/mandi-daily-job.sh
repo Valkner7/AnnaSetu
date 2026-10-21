@@ -115,8 +115,15 @@ fi
 if [ "$RETRAIN" = 1 ]; then
     [ -x "$SVC/.venv/bin/python" ] || fail "Retrain needs the service environment. Run tools/linux/start-mandi-service.sh once first."
     log "Retraining the forecast model ..."
-    ( cd "$SVC" && .venv/bin/python train_forecast_model.py 2>&1 | while IFS= read -r l; do log "train: $l"; done; exit "${PIPESTATUS[0]}" ) \
-        || fail "Retraining failed. The old model is still in use."
+    rc=0
+    ( cd "$SVC" && .venv/bin/python train_forecast_model.py 2>&1 | while IFS= read -r l; do log "train: $l"; done; exit "${PIPESTATUS[0]}" ) || rc=$?
+    if [ "$rc" = 3 ]; then
+        # Exit code 3 = the trainer's quality gate: the new model did not beat "price stays the
+        # same", so it was not saved. That is the gate working, not a failure of the job.
+        log "WARNING: the new model did not beat 'price stays the same', so it was NOT saved. The old model stays in use."
+    elif [ "$rc" != 0 ]; then
+        fail "Retraining failed (exit $rc). The old model is still in use."
+    fi
 fi
 
 log "Daily job finished OK."

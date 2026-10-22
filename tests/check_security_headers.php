@@ -39,6 +39,12 @@ try {
         check('Permissions-Policy keeps location for this site', strpos($pp, 'geolocation=(self)') !== false);
         check('Permissions-Policy keeps the microphone for this site (voice question)', strpos($pp, 'microphone=(self)') !== false);
         check('Permissions-Policy turns camera, payment and usb off', strpos($pp, 'camera=()') !== false && strpos($pp, 'payment=()') !== false && strpos($pp, 'usb=()') !== false);
+        $csp = (string) header_value($plain, 'Content-Security-Policy');
+        check('Content-Security-Policy is sent', $csp !== '');
+        check('CSP blocks plugins and foreign base tags', strpos($csp, "object-src 'none'") !== false && strpos($csp, "base-uri 'self'") !== false);
+        check('CSP only lets this site frame it and post forms', strpos($csp, "frame-ancestors 'self'") !== false && strpos($csp, "form-action 'self'") !== false);
+        check('CSP allows the CDNs the pages use', strpos($csp, 'https://cdn.jsdelivr.net') !== false && strpos($csp, 'https://cdnjs.cloudflare.com') !== false);
+        check('CSP allows blob audio (spoken advisory reply)', strpos($csp, 'media-src') !== false && strpos($csp, 'blob:') !== false);
         check('no HSTS over plain HTTP', header_value($plain, 'Strict-Transport-Security') === null);
         $hsts = (string) header_value($https, 'Strict-Transport-Security');
         check('HSTS sent when the request came over HTTPS', preg_match('/^max-age=\d{6,}$/', $hsts) === 1);

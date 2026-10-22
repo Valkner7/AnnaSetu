@@ -25,6 +25,23 @@ if ($isHttps) {
     header('Strict-Transport-Security: max-age=15552000');
 }
 
+// Content-Security-Policy (O1). The pages use inline scripts and styles, so 'unsafe-inline' stays for
+// now; what this adds is a fixed list of allowed hosts (the CDNs the views load), no plugins, no
+// foreign <base>, forms only to this site, and framing only by this site. APP_CSP=report-only sends
+// it as report-only (nothing is blocked); APP_CSP=off sends no policy.
+$cspMode = strtolower((string) (getenv('APP_CSP') ?: 'enforce'));
+if ($cspMode !== 'off') {
+    $csp = "default-src 'self'; "
+        . "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
+        . "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; "
+        . "font-src 'self' data: https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.gstatic.com; "
+        . "img-src 'self' data: blob: https://images.unsplash.com; "
+        . "media-src 'self' blob: data:; "
+        . "connect-src 'self'; "
+        . "object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'";
+    header(($cspMode === 'report-only' ? 'Content-Security-Policy-Report-Only: ' : 'Content-Security-Policy: ') . $csp);
+}
+
 // Base URL path of this app (no trailing slash). Derived from where index.php is served,
 // e.g. /smartharvest/public on XAMPP, or empty when public/ is the web root.
 // Override with the APP_BASE_URL environment variable if needed.

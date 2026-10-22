@@ -17,7 +17,9 @@ namespace App\Helpers;
  *
  * The optional shared secret (M10) follows the same order: environment variable
  * MANDI_API_SECRET, then 'api_secret' in config/mandi.local.php, else none.
- * It is only ever sent to the price service's advisory endpoints.
+ * It is only ever sent to the price service's advisory endpoints, and only to
+ * the main address. The hosted fallback has its own optional secret
+ * ('fallback_secret' / MANDI_FALLBACK_SECRET), sent only to that host.
  *
  * An address that is not usable is ignored with a log line, so a typo can
  * never point the app at something unexpected: the next source is used.
@@ -30,14 +32,15 @@ class MandiConfig {
     public const DEFAULT_API_BASE = 'https://mandi-price-forecast-1.onrender.com';
 
     // Only these keys may be overridden from the local file.
-    private const KEYS = ['api_base', 'fallback_base', 'timeout_seconds', 'connect_timeout_seconds', 'cache_ttl_seconds', 'api_secret'];
+    private const KEYS = ['api_base', 'fallback_base', 'timeout_seconds', 'connect_timeout_seconds', 'cache_ttl_seconds', 'api_secret', 'fallback_secret'];
 
     /**
      * @param string      $localFile Path to the optional local override file.
      * @param string|null $envValue  Value of MANDI_API_BASE (null/'' = not set).
      * @param string|null $secretEnv Value of MANDI_API_SECRET (null/'' = not set).
+     * @param string|null $fallbackSecretEnv Value of MANDI_FALLBACK_SECRET (null/'' = not set).
      */
-    public static function load(string $localFile, ?string $envValue = null, ?string $secretEnv = null): array {
+    public static function load(string $localFile, ?string $envValue = null, ?string $secretEnv = null, ?string $fallbackSecretEnv = null): array {
         $cfg = [
             'api_base' => self::DEFAULT_LOCAL_BASE,
             'fallback_base' => self::DEFAULT_API_BASE,
@@ -50,6 +53,10 @@ class MandiConfig {
             'cache_ttl_seconds' => 14400,
             // Shared secret for the advisory endpoints (M10). '' = none.
             'api_secret' => '',
+            // Separate secret for the hosted fallback (Issue 22). '' = none. It is a
+            // different deployment with its own API_SHARED_SECRET, so it never shares
+            // a value with api_secret by accident.
+            'fallback_secret' => '',
         ];
 
         if (is_file($localFile)) {
@@ -75,10 +82,10 @@ class MandiConfig {
                             continue;
                         }
                         $cfg[$k] = $clean;
-                    } elseif ($k === 'api_secret') {
+                    } elseif ($k === 'api_secret' || $k === 'fallback_secret') {
                         $clean = self::cleanSecret($local[$k]);
                         if ($clean === null) {
-                            error_log('MandiConfig: ignoring unusable api_secret in ' . basename($localFile));
+                            error_log('MandiConfig: ignoring unusable ' . $k . ' in ' . basename($localFile));
                             continue;
                         }
                         $cfg[$k] = $clean;
@@ -104,6 +111,15 @@ class MandiConfig {
                 error_log('MandiConfig: ignoring unusable MANDI_API_SECRET');
             } else {
                 $cfg['api_secret'] = $clean;
+            }
+        }
+
+        if ($fallbackSecretEnv !== null && trim($fallbackSecretEnv) !== '') {
+            $clean = self::cleanSecret($fallbackSecretEnv);
+            if ($clean === null) {
+                error_log('MandiConfig: ignoring unusable MANDI_FALLBACK_SECRET');
+            } else {
+                $cfg['fallback_secret'] = $clean;
             }
         }
         return $cfg;

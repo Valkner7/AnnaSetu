@@ -80,6 +80,11 @@ foreach (['short', 'has space inside 123', "line\r\nbreak-12345", "tab\there1234
 }
 check('bad env secret falls back to local file', MandiConfig::load(localFile($tmp, "<?php return ['api_secret' => '$S'];"), null, 'bad value')['api_secret'] === $S);
 check('bad env secret alone -> none', MandiConfig::load($none, null, 'no')['api_secret'] === '');
+check('no fallback secret by default', MandiConfig::load($none)['fallback_secret'] === '');
+check('fallback secret from env var', MandiConfig::load($none, null, null, $S)['fallback_secret'] === $S);
+check('fallback secret from local file', MandiConfig::load(localFile($tmp, "<?php return ['fallback_secret' => '$S'];"))['fallback_secret'] === $S);
+check('bad fallback secret is ignored', MandiConfig::load($none, null, null, 'no')['fallback_secret'] === '');
+check('fallback secret does not change api_secret', MandiConfig::load($none, null, null, $S)['api_secret'] === '');
 
 class HeaderProbe extends \App\Services\MandiService {
     public function headers($path) { return $this->requestHeaders($path); }

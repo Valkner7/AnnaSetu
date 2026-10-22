@@ -7,6 +7,8 @@
 //
 // Shared secret for the advisory endpoints (M10): MANDI_API_SECRET, or 'api_secret' in
 // mandi.local.php. Must equal API_SHARED_SECRET on the price service. Optional.
+// The hosted fallback is a different deployment: its secret is MANDI_FALLBACK_SECRET
+// (or 'fallback_secret'), sent only to that host. Optional.
 require_once __DIR__ . '/../app/Helpers/MandiConfig.php';
 
 $env = getenv('MANDI_API_BASE');
@@ -19,8 +21,14 @@ if (!is_string($secret) || $secret === '') {
     $secret = $_SERVER['MANDI_API_SECRET'] ?? null;
 }
 
+$fallbackSecret = getenv('MANDI_FALLBACK_SECRET');
+if (!is_string($fallbackSecret) || $fallbackSecret === '') {
+    $fallbackSecret = $_SERVER['MANDI_FALLBACK_SECRET'] ?? null;
+}
+
 return \App\Helpers\MandiConfig::load(
     __DIR__ . '/mandi.local.php',
     is_string($env) ? $env : null,
-    is_string($secret) ? $secret : null
+    is_string($secret) ? $secret : null,
+    is_string($fallbackSecret) ? $fallbackSecret : null
 );

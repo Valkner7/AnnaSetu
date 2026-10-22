@@ -10,6 +10,10 @@ class PriceAlertRules {
     public const MAX_ACTIVE_PER_USER = 20;
     public const MIN_PRICE = 1;
     public const MAX_PRICE = 200000;     // Rs per quintal
+    // A mandi's newest price older than this is not used to trigger or record an alert: the alert
+    // would say "reached" for a price that is weeks old. The alert stays active and is counted as
+    // "unavailable" until fresh data arrives.
+    public const MAX_PRICE_AGE_DAYS = 7;
 
     /** True when the reported price has reached the alert's target. Equal counts as reached. */
     public static function isTriggered(string $direction, $target, $price): bool {
@@ -29,6 +33,13 @@ class PriceAlertRules {
      * Latest usable point from the service's /history points: the newest entry
      * with a real date and a positive number. Returns [price, date] or null.
      */
+    /** True when $date (YYYY-MM-DD) is at most $maxDays days before $today (default: today, UTC). */
+    public static function isFresh(string $date, ?string $today = null, int $maxDays = self::MAX_PRICE_AGE_DAYS): bool {
+        $d = strtotime($date . ' 00:00:00 UTC');
+        $n = strtotime(($today ?? gmdate('Y-m-d')) . ' 00:00:00 UTC');
+        return $d !== false && $n !== false && (($n - $d) / 86400) <= $maxDays;
+    }
+
     public static function latestPoint($points): ?array {
         if (!is_array($points)) {
             return null;

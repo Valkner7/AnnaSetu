@@ -38,7 +38,7 @@ class FakeSvc extends MandiService {
             return ['ok' => true, 'status' => 200, 'error' => null, 'data' => ['reliable_crops' => ['Potato', 'Onion'], 'mandis' => ['Rayya', 'Khanna']]];
         }
         if ($path === '/history') {
-            return ['ok' => true, 'status' => 200, 'error' => null, 'data' => ['points' => [['date' => '2026-10-18', 'price' => 900]]]];
+            return ['ok' => true, 'status' => 200, 'error' => null, 'data' => ['points' => [['date' => gmdate('Y-m-d'), 'price' => 900]]]];
         }
         return ['ok' => false, 'status' => 404, 'error' => 'x', 'data' => null];
     }

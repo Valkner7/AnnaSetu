@@ -33,6 +33,10 @@ class PriceAlertChecker {
             $summary['pairs']++;
             $res = $this->service->getHistory($alerts[0]['crop'], $alerts[0]['mandi'], 7);
             $pt = $res['ok'] ? PriceAlertRules::latestPoint($res['data']['points'] ?? null) : null;
+            // A price this mandi reported weeks ago is not today's price: leave its alerts untouched.
+            if ($pt !== null && !PriceAlertRules::isFresh($pt[1])) {
+                $pt = null;
+            }
             foreach ($alerts as $a) {
                 if ($pt === null) {
                     $summary['unavailable']++;

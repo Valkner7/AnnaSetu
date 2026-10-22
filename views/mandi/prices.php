@@ -142,12 +142,15 @@
     function futureRows(rows, today) {
         return (rows || []).filter(function (f) { return f && f.date && f.date >= today; });
     }
-    // One notice only: prefer the service's age warning, then its data note, else a generic stale message.
-    function pickNotice(d, hiddenCount) {
-        if (d.data_age_warning) { return d.data_age_warning; }
-        if (d.data_note) { return d.data_note; }
-        if (hiddenCount > 0) { return fmt(T.stale_hidden, { date: d.latest_date }); }
-        return '';
+    // Notices to show. data_note is about this crop and mandi (its newest record may be weeks older
+    // than the rest of the data); data_age_warning is about the whole dataset. Both can be true at
+    // once, so both are shown (pair note first). With neither, a generic message if past days were hidden.
+    function pickNotices(d, hiddenCount) {
+        var out = [];
+        if (d.data_note) { out.push(d.data_note); }
+        if (d.data_age_warning && d.data_age_warning !== d.data_note) { out.push(d.data_age_warning); }
+        if (out.length === 0 && hiddenCount > 0) { out.push(fmt(T.stale_hidden, { date: d.latest_date })); }
+        return out;
     }
     function render(d) {
         var all = d.forecast || [];
@@ -155,8 +158,7 @@
         var hidden = all.length - rows.length;
         var w = el('warnings');
         w.innerHTML = '';
-        var notice = pickNotice(d, hidden);
-        if (notice) { addWarning(w, notice); }
+        pickNotices(d, hidden).forEach(function (n) { addWarning(w, n); });
         el('price').textContent = money(d.latest_price) + ' ' + T.per_quintal;
         el('priceMeta').textContent = fmt(T.price_meta, { crop: CROP_LABELS[d.crop] || d.crop, mandi: d.mandi, date: d.latest_date });
         el('trend').textContent = fmt(T.trend, { trend: d.trend_label || d.trend || T.trend_na });

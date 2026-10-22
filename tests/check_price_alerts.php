@@ -76,12 +76,13 @@ $x1 = $m->create(1, 'Potato', 'Rayya', 'above', 800);
 $x2 = $m->create(2, 'Potato', 'Rayya', 'below', 400);
 $x3 = $m->create(2, 'Potato', 'Rayya', 'above', 900);
 $x4 = $m->create(3, 'Onion', 'Khanna', 'below', 300);
-FakeHist::$series = ['Potato|Rayya' => [['date' => '2026-10-17', 'price' => 790], ['date' => '2026-10-18', 'price' => 820]], 'Onion|Khanna' => null];
+$d1 = gmdate('Y-m-d', strtotime('-2 days')); $d2 = gmdate('Y-m-d', strtotime('-1 day')); $d3 = gmdate('Y-m-d');   // fresh dates: old ones would be refused as stale
+FakeHist::$series = ['Potato|Rayya' => [['date' => $d1, 'price' => 790], ['date' => $d2, 'price' => 820]], 'Onion|Khanna' => null];
 $sum = (new PriceAlertChecker($m, svc($tmp)))->run();
 check('one lookup per crop+mandi pair', FakeHist::$calls === ['Potato|Rayya', 'Onion|Khanna'], json_encode(FakeHist::$calls));
 check('summary counts', $sum === ['checked' => 3, 'triggered' => 1, 'unavailable' => 1, 'pairs' => 2], json_encode($sum));
 $rows = []; foreach ($m->listByUser(1) as $r) { $rows[$r['id']] = $r; }
-check('above 800 at 820 triggered with price and date', $rows[$x1]['status'] === 'triggered' && (float) $rows[$x1]['triggered_price'] === 820.0 && $rows[$x1]['triggered_price_date'] === '2026-10-18');
+check('above 800 at 820 triggered with price and date', $rows[$x1]['status'] === 'triggered' && (float) $rows[$x1]['triggered_price'] === 820.0 && $rows[$x1]['triggered_price_date'] === $d2);
 $u2 = []; foreach ($m->listByUser(2) as $r) { $u2[$r['id']] = $r; }
 check('untriggered alerts stay active and remember the last price', $u2[$x2]['status'] === 'active' && (float) $u2[$x2]['last_price'] === 820.0 && $u2[$x3]['status'] === 'active');
 $u3 = $m->listByUser(3)[0];
@@ -91,11 +92,23 @@ FakeHist::$calls = [];
 $sum = (new PriceAlertChecker($m, svc($tmp)))->run(2);
 check('run for one user only looks at that user', FakeHist::$calls === ['Potato|Rayya'] && $sum['checked'] === 2 && $sum['triggered'] === 0, json_encode([FakeHist::$calls, $sum]));
 
-FakeHist::$series['Potato|Rayya'] = [['date' => '2026-10-19', 'price' => 380]];
+FakeHist::$series['Potato|Rayya'] = [['date' => $d3, 'price' => 380]];
 $sum = (new PriceAlertChecker($m, svc($tmp)))->run();
 check('below 400 at 380 triggers on a later run', $sum['triggered'] === 1 && $m->countUnseen(2) === 1);
 $again = (new PriceAlertChecker($m, svc($tmp)))->run();
 check('already triggered alerts are not checked again', $again['checked'] === 1 && $again['triggered'] === 0 && $again['unavailable'] === 1, json_encode($again));
+
+// Stale prices (Issue: an alert must not say "reached" for a price that is weeks old).
+check('isFresh: today and 7 days old are fresh', R::isFresh('2026-10-22', '2026-10-22') && R::isFresh('2026-10-15', '2026-10-22'));
+check('isFresh: 8 days old and junk are not fresh', !R::isFresh('2026-10-14', '2026-10-22') && !R::isFresh('not a date', '2026-10-22'));
+$x5 = $m->create(4, 'Potato', 'Ludhiana', 'above', 200);
+FakeHist::$series['Potato|Ludhiana'] = [['date' => gmdate('Y-m-d', strtotime('-28 days')), 'price' => 300]];
+$sum = (new PriceAlertChecker($m, svc($tmp)))->run(4);
+$u4 = $m->listByUser(4)[0];
+check('a 28-day-old price does not trigger the alert', $u4['status'] === 'active' && $u4['last_price'] === null && $sum['triggered'] === 0 && $sum['unavailable'] === 1, json_encode([$sum, $u4]));
+FakeHist::$series['Potato|Ludhiana'] = [['date' => gmdate('Y-m-d', strtotime('-1 day')), 'price' => 300]];
+$sum = (new PriceAlertChecker($m, svc($tmp)))->run(4);
+check('the same alert triggers once the price is fresh', $sum['triggered'] === 1, json_encode($sum));
 
 echo $fail === 0 ? "\nOK: all price alert checks passed.\n" : "\n$fail check(s) FAILED.\n";
 exit($fail === 0 ? 0 : 1);

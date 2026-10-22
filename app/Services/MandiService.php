@@ -11,6 +11,7 @@ class MandiService {
     private $cacheDir;
     private $cacheTtl;
     private $apiSecret;
+    private $fallbackSecret;
 
     /**
      * @param array|null $override Optional config overrides (used by tests).
@@ -28,13 +29,15 @@ class MandiService {
         $this->connectTimeout = $cfg['connect_timeout_seconds'] ?? 20;
         $this->cacheTtl = (int) ($cfg['cache_ttl_seconds'] ?? 14400);
         $this->apiSecret = is_string($cfg['api_secret'] ?? null) ? $cfg['api_secret'] : '';
+        $this->fallbackSecret = is_string($cfg['fallback_secret'] ?? null) ? $cfg['fallback_secret'] : '';
         $this->cacheDir = rtrim($cfg['cache_dir'] ?? (__DIR__ . '/../../storage/cache/mandi'), '/\\');
     }
 
     // Endpoints that spend Gemini / text-to-speech quota. The shared secret (M10)
     // is sent to these paths, and only to the configured primary address
     // (api_base), never to the fallback address: the fallback is a different
-    // deployment with its own secret, so sending ours there would leak it.
+    // deployment with its own secret, so sending ours there would leak it. The
+    // fallback gets its own optional secret (fallback_secret), and only that one.
     public const SECRET_PATHS = ['/advisory', '/compare-advisory', '/voice-advisory'];
 
     // Used only when the price service has never been reachable (no cache yet).
@@ -248,8 +251,14 @@ class MandiService {
     protected function requestHeaders($path, $base = null) {
         $headers = ['Accept: application/json'];
         $toPrimary = $base === null || strcasecmp(rtrim((string) $base, '/'), $this->base) === 0;
-        if ($toPrimary && $this->apiSecret !== '' && in_array($path, self::SECRET_PATHS, true)) {
-            $headers[] = 'X-Api-Secret: ' . $this->apiSecret;
+        if (in_array($path, self::SECRET_PATHS, true)) {
+            if ($toPrimary && $this->apiSecret !== '') {
+                $headers[] = 'X-Api-Secret: ' . $this->apiSecret;
+            } elseif (!$toPrimary && $this->fallbackSecret !== ''
+                && $this->fallback !== '' && strcasecmp(rtrim((string) $base, '/'), $this->fallback) === 0) {
+                // Only the configured fallback host, never an arbitrary address.
+                $headers[] = 'X-Api-Secret: ' . $this->fallbackSecret;
+            }
         }
         return $headers;
     }

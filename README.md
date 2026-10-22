@@ -107,6 +107,7 @@ The daily job overwrites the tracked CSV (and, with `-Retrain`, the model) in `a
 | `MANDI_API_BASE` | environment variable or `api_base` in `mandi.local.php` | Address of the price service (default `http://127.0.0.1:8001`). |
 | `fallback_base` | `mandi.local.php` | Hosted copy used when the local service is down (default Render; `''` turns it off). |
 | `MANDI_API_SECRET` | environment variable or `api_secret` in `mandi.local.php` | Shared secret sent to the advisory endpoints of the main price service only (never to the fallback address, which is a different deployment); must match `API_SHARED_SECRET` on that service. Never commit it. |
+| `MANDI_FALLBACK_SECRET` | environment variable or `fallback_secret` in `mandi.local.php` | The hosted fallback's own `API_SHARED_SECRET` (a different deployment, so a different value from `MANDI_API_SECRET`). Sent only to `fallback_base` and only to the advisory endpoints. Without it, the hosted copy cannot answer advisory requests when the local service is down. Never commit it. |
 
 ## Tests
 

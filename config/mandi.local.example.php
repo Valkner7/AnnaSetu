@@ -15,4 +15,9 @@ return [
     // Same value as API_SHARED_SECRET on the price service (8-200 visible characters, no spaces).
     // Only sent to the advisory endpoints. Never commit it.
     // 'api_secret' => '',
+    // Secret of the hosted fallback (its own API_SHARED_SECRET on Render). Sent only to
+    // 'fallback_base', only to the advisory endpoints. Without it the hosted copy cannot
+    // answer advisory requests when its secret is set (or when it is unset and the caller
+    // is remote). Different from api_secret. Never commit it.
+    // 'fallback_secret' => '',
 ];

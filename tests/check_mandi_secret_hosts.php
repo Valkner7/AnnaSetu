@@ -90,9 +90,32 @@ check('a lookalike address never gets the secret', $probe->headers('/advisory', 
 check('no base given = primary (older callers keep working)', $probe->headers('/advisory') === $with);
 check('other paths never get the secret, even on the primary', $probe->headers('/meta', 'http://127.0.0.1:8001') === $none);
 
+// Issue 22: the hosted fallback has its own optional secret, sent only to it.
+$FB = 'fallback-secret-9999';
+$probe2 = new HeaderProbe(['api_base' => 'http://127.0.0.1:8001', 'fallback_base' => 'https://hosted.example.org', 'api_secret' => $SECRET, 'fallback_secret' => $FB, 'cache_dir' => $tmp . '/cache']);
+check('fallback host gets its own secret', $probe2->headers('/advisory', 'https://hosted.example.org') === ['Accept: application/json', "X-Api-Secret: $FB"]);
+check('primary host never gets the fallback secret', $probe2->headers('/advisory', 'http://127.0.0.1:8001') === $with);
+check('an unrelated host gets neither secret', $probe2->headers('/advisory', 'https://evil.example.com') === $none);
+check('fallback secret not sent on other paths', $probe2->headers('/meta', 'https://hosted.example.org') === $none);
+check('no fallback secret configured: fallback gets nothing', $probe->headers('/advisory', 'https://hosted.example.org') === $none);
+
+// End to end: primary 500s, fallback answers; each server sees only its own secret.
+if ($srv1 && $srv2) {
+    @unlink($primaryLog); @unlink($fallbackLog);
+    $svc2 = new MandiService([
+        'api_base' => "http://127.0.0.1:$p1", 'fallback_base' => "http://127.0.0.1:$p2",
+        'api_secret' => $SECRET, 'fallback_secret' => $FB,
+        'cache_dir' => $tmp . '/cache', 'cache_ttl_seconds' => 0,
+    ]);
+    $svc2->getAdvisory('Potato', 'Rayya', 'price?', 'en');
+    $pl = lines($primaryLog); $fl = lines($fallbackLog);
+    check('e2e: primary received the primary secret only', count($pl) === 1 && substr($pl[0], -strlen($SECRET)) === $SECRET, json_encode($pl));
+    check('e2e: fallback received the fallback secret only', count($fl) === 1 && substr($fl[0], -strlen($FB)) === $FB && strpos($fl[0], $SECRET) === false, json_encode($fl));
+}
+
 foreach ([$srv1 ?? null, $srv2 ?? null] as $s) { if (is_resource($s)) { proc_terminate($s); proc_close($s); } }
 foreach (glob($tmp . '/*') ?: [] as $x) { is_file($x) && @unlink($x); }
 @rmdir($tmp . '/cache'); @rmdir($tmp);
 
-fwrite(STDOUT, $fails === 0 ? "\nOK: the secret only goes to the primary address.\n" : "\n$fails check(s) FAILED.\n");
+fwrite(STDOUT, $fails === 0 ? "\nOK: each secret only goes to its own host.\n" : "\n$fails check(s) FAILED.\n");
 exit($fails === 0 ? 0 : 1);

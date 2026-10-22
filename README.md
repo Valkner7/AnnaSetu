@@ -93,9 +93,11 @@ bash tools/linux/mandi-daily-job.sh --retrain      # same, then retrain the fore
 - Install the price repo's libraries once before the first fetch: `python3 -m pip install -r ~/mandi-fetch/requirements.txt`.
 - On a server that stays on, a missed day is no longer lost because your own PC was off. If `api.data.gov.in` cannot be reached from the server either, the fetch fails loudly in `storage/logs/mandi-daily-job.log` and the old data keeps being used.
 
-### About the price service's own alert endpoints
+### Slim mode (what the bundled service runs)
 
-The bundled service still contains its own `/check-alerts` and WhatsApp/SMS subscription code from the original Mandi Setu project. AnnaSetu does **not** use them (that part is parked for now). AnnaSetu's price alerts are a separate system: they live in MySQL (`price_alerts`) and are checked by `tools/check-price-alerts.php`, which is the only alert check you need to schedule.
+The bundled service still contains the original Mandi Setu project's own WhatsApp/SMS bot (`/whatsapp`, `/sms`), alert sweep (`/check-alerts`), Turso subscriptions database, React dashboard and demo pages. AnnaSetu uses none of them (its price alerts are a separate system in MySQL, checked by `tools/check-price-alerts.php`, the only alert check you need to schedule).
+
+So the start scripts run the service in **slim mode** (`MANDI_SLIM=1`, set by default): those parts answer 404 and are never loaded, `twilio` and `libsql` are not installed (the scripts install `ai/mandi_service/requirements-slim.txt`), and `/status` no longer reports "degraded" because of Turso. Everything AnnaSetu calls is unchanged: forecast, history, compare, nearby mandis, status, advisory and voice advisory. To run the full original service instead, set `MANDI_SLIM=0` in `config/mandi-service.env` and install `ai/mandi_service/requirements.txt`. The files are still in the folder; slim mode only switches them off.
 
 The daily job overwrites the tracked CSV (and, with `-Retrain`, the model) in `ai\mandi_service`, so `git status` shows them as modified. Do not commit that every day; use `tools\sync-mandi-service.ps1` when you want the repository copy refreshed on purpose.
 

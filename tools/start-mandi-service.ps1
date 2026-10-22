@@ -11,7 +11,7 @@ Needs Python 3.12 or newer on PATH (python --version).
 
 Options:
     -Port 8001   Port to listen on. If you change it, set 'api_base' in config\mandi.local.php to match.
-    -Install     Reinstall the libraries (use after the service's requirements.txt changes).
+    -Install     Reinstall the libraries (use after the service's requirements-slim.txt changes).
     -Hidden      Run with no window and write a log to storage\logs\mandi-service.log
                  (this is what the scheduled task uses).
 
@@ -61,9 +61,15 @@ if (-not (Test-Path $py)) {
 if ($Install) {
     Write-Host "Installing libraries (this can take a few minutes) ..."
     & $py -m pip install --upgrade pip --quiet
-    & $py -m pip install -r (Join-Path $svc "requirements.txt")
+    & $py -m pip install -r (Join-Path $svc "requirements-slim.txt")
     if ($LASTEXITCODE -ne 0) { throw "pip install failed. Check your internet connection and try again." }
 }
+
+# Slim mode (the default here): only the endpoints AnnaSetu uses. The original project's WhatsApp/SMS
+# bot, /check-alerts, Turso and the React dashboard are switched off and their libraries are not
+# needed. Set MANDI_SLIM=0 in config\mandi-service.env to run everything (then install
+# ai\mandi_service\requirements.txt yourself).
+if (-not $env:MANDI_SLIM) { $env:MANDI_SLIM = "1" }
 
 # 2. Optional settings file (KEY=VALUE per line; lines starting with # are ignored)
 $envFile = Join-Path $root "config\mandi-service.env"

@@ -34,8 +34,14 @@ fi
 if [ "$INSTALL" = 1 ]; then
     echo "Installing libraries (this can take a few minutes) ..."
     "$VENV/bin/python" -m pip install --upgrade pip --quiet
-    "$VENV/bin/python" -m pip install -r "$SVC/requirements.txt"
+    "$VENV/bin/python" -m pip install -r "$SVC/requirements-slim.txt"
 fi
+
+# Slim mode (the default here): only the endpoints AnnaSetu uses. The original project's WhatsApp/SMS
+# bot, /check-alerts, Turso and the React dashboard are switched off and their libraries are not
+# needed. Set MANDI_SLIM=0 in config/mandi-service.env to run everything (then install
+# ai/mandi_service/requirements.txt yourself).
+export MANDI_SLIM="${MANDI_SLIM:-1}"
 
 # Optional settings file: KEY=VALUE per line, # for comments.
 ENV_FILE="$ROOT/config/mandi-service.env"
